@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null &&
+                         (request.auth.token.admin == true || request.auth.token.superadmin == true);
+    }
+
+    // Stores collection
+    match /stores/{storeId} {
+      allow read: if request.auth != null && request.auth.token.storeId == storeId;
+      allow read, write: if request.auth != null &&
+                         (request.auth.token.admin == true || request.auth.token.superadmin == true);
+    }
+
+    // Products collection (any authenticated user can read)
+    match /products/{productId} {
+      allow read: if request.auth != null;   // ✅ read for logged-in users
+      allow write: if request.auth != null &&
+                   (request.auth.token.admin == true || request.auth.token.superadmin == true); // only admins can write
+    }
+
+    // Admin-only collection
+    match /adminData/{docId} {
+      allow read, write: if request.auth != null &&
+                         (request.auth.token.admin == true || request.auth.token.superadmin == true);
+    }
+
+    // Superadmin-only collection
+    match /superadminData/{docId} {
+      allow read, write: if request.auth != null && request.auth.token.superadmin == true;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
