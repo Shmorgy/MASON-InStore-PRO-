@@ -1,52 +1,76 @@
-// ...existing code...
-import { useState } from "react";
-import  {StoreName}  from "./VALUES.jsx"
-import { useNavigate } from "react-router-dom";
+import { useRef, useState, useEffect } from "react";
+import { useNavigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useStore } from "../context/StoreProvider.jsx";
 
-
-function Layout(){
+function Layout() {
+  const { isAdmin, user, logout } = useAuth();
+  const { storeName } = useStore(); 
+  const wrapperRef = useRef(null);
   const navigate = useNavigate();
-  const [open, setSwitch] = useState(true);
-  const switchy = () => setSwitch(v => !v);
+  const [open, setOpen] = useState(true);
+
+  const toggleMenu = () => setOpen((v) => !v);
+
   const go = (path) => () => {
-    {open ? (null):(switchy())};
+    setOpen(true);
     navigate(path);
   };
-  
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/sign_in", { replace: true });
+  };
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(true);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <>
-      {open ? (
-        <section className="TOPBAH">
-          <button className="SB" onClick={go("/home")}>{StoreName}</button>
-          <button className="NB" onClick={switchy}>sign in</button>
-        </section>
-      ) : (
-        <>
-        <section className="TOPBAH">
-          <button className="SB" onClick={go("/home")}>{StoreName}</button>
-          <button className="NB" onClick={switchy}>sign in</button>
-        </section>
-        <div className="centered"> 
-          <section className="FULLBAH"> 
-            <section className="product_grid">
-              <button className="SB" onClick={go("/store")}>Store</button>
-              <button className="SB" onClick={go("/profile")}>Profile</button>
-              <button className="SB" onClick={go("/contact")}>Contact</button>
-              <button className="SB" onClick={go("/settings")}>Settings</button>
-              <button className="SB" onClick={go("/page")}>Pages</button>
-              <button className="SB" onClick={go("/home")}>{StoreName}</button>
-        
-            </section>
-          </section>
+    <section>
+      
+      <section className="TOPBAH">
+        <button className="SB" onClick={go("/home")}>
+          {storeName}
           
-        </div>
-       
-    
-        </>
+        </button>
+
+        {!user ? (
+          <button className="NB" onClick={go("/sign_in")}>
+            Sign In / Up
+          </button>
+        ) : (
+          <button className="NB" onClick={toggleMenu}>
+            Navigate
+          </button>
+        )}
+      </section>
+
+      {!open && (
+        <section ref={wrapperRef} className="FULLBAH">
+          <section className="filter_grid">
+            <button className="FB" onClick={go("/store")}>Store</button>
+            {user && <button className="FB" onClick={go("/profile")}>Profile</button>}
+            
+            {user && <button className="FB" onClick={go("/orders")}>Orders</button>}
+            {isAdmin && <button className="FB" onClick={go("/setup")}>Setup</button>}
+            {user && <button className="FB" onClick={handleLogout}>Logout</button>}
+          </section>
+        </section>
       )}
-    </>
+
+      <main className = "page-offset" >
+        <Outlet />
+      </main>
+    </section>
   );
 }
+
 export default Layout;
-// ...existing code...

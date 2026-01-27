@@ -1,0 +1,153 @@
+@import url(./styles.css);
+/* --- BASE CONTAINER --- */
+.carousel-container {
+  overflow: hidden;
+  width: 100%;
+  min-height: 30vh;
+  position: relative;
+  height: fit-content;
+  transition: transform 0.6s cubic-bezier(.16,.84,.44,1); /* snap animation */
+  will-change: transform;
+}
+
+/* Magnet “snap” class (added by JS) */
+.carousel-container.magnet-active {
+  transform: translateY(20px); /* gentle pull upward */
+}
+
+/* --- TRACK --- */
+.carousel-track {
+  display: flex;
+  gap: 1rem;
+  height: 40vh;
+  width: fit-content;
+  animation: scroll-carousel 20s linear infinite;
+  transition: transform 0.5s ease, scale 0.5s ease;
+  will-change: transform;
+}
+
+/* --- CARD --- */
+.F-card {
+  flex: 0 0 30vw; /* bigger on desktop */
+  max-height: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: transparent;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  background-color: var(--top);
+  width: 50vh;
+  color: var(--A-color);
+  min-height: 30vh;
+}
+
+.F-card img {
+    width: max-content;
+    height: auto;
+    overflow: auto;
+    border-radius: 13px;
+    color: var(--FA-color);
+}
+
+.product-name{
+  text-align: center;
+  position: relative;
+  color: var(--A-color);
+}
+
+.F-card:hover {
+  transform: scale(1.01); /* small lift */
+}
+
+/* --- Mobile + Tablet --- */
+@media (max-width: 1024px) {
+  .F-card {
+    flex: 0 0 45vw;
+    max-width: 300px;
+    height: 50vh;
+  }
+
+  
+}
+
+/* --- Card Image --- */
+
+
+/* --- Infinite Scroll Animation --- */
+@keyframes scroll-carousel {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Hover only stops velocity; no jumpcut */
+.carousel-container:hover .carousel-track {
+  transition: transform 0.5s ease;
+}
+
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999999;
+  touch-action: none;
+}
+
+.modal-content {
+  background: #ffffff38;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: grab;
+  transition: transform 0.2s ease;
+  max-height: 70dvh;
+}
+
+.modal-content:active {
+  cursor: grabbing;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-content img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.modal-content h2 {
+  margin-bottom: 10px;
+}
+
+.modal-content p {
+  text-align: center;
+}
+
+@media screen and (max-width: 600px) {
+  .F-card{
+    max-width: fit-content;
+  }
+}

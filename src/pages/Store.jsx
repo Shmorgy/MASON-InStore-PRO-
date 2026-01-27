@@ -1,146 +1,218 @@
-// ...existing code...
-import { Helmet } from "react-helmet-async";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { collection, onSnapshot, query, orderBy, where, doc, getDoc, setDoc } from "firebase/firestore";
+import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+
+import ProductCard from "../components/Product.jsx";
+import AddProduct from "../components/Add_Product.jsx";
 import ShopBar from "../components/ShopBar.jsx";
+import EditFiltersModal from "../components/EditFiltersModal.jsx";
+import Carousel from "../components/carousel.jsx";
+import { db } from "../firebase.js";
 
-export default function Page() {
+export default function Store() {
   const rootRef = useRef(null);
-  const [grid, setGrid] = useState(false);
+  const { cart, addToCart } = useCart();
+  const { isAdmin } = useAuth();
 
+  const [grid, setGrid] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [featured, setFeatured] = useState([]);
+  const [topProduct, setTopProduct] = useState(null);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [expandedProductId, setExpandedProductId] = useState(null); // <-- ID instead of full object
+  const [editFeaturedMode, setEditFeaturedMode] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [editFiltersOpen, setEditFiltersOpen] = useState(false);
+
+  // User-selected filters
+  const [collections, setCollections] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+
+  // Firestore filters
+  const [availableCollections, setAvailableCollections] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+
+  const productsRef = collection(db, "products");
+  const featuredQuery = query(productsRef, where("featured", "==", true));
+  const topQuery = query(productsRef, orderBy("salesCount", "desc"));
+
+  // Load Firestore filter options
   useEffect(() => {
-    const dur = 10;
-    const root = rootRef.current;
-    if (!root) return;
+    const loadFilters = async () => {
+      const docRef = doc(db, "storeData", "main");
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setAvailableCollections(data.collections || []);
+        setAvailableTags(data.tags || []);
+      }
+    };
+    loadFilters();
+  }, []);
 
-    // set per-group CSS animation duration for .group
-    const groups = Array.from(root.querySelectorAll(".group"));
-    groups.forEach((g) => {
-      const d = g.children.length || 1;
-      const T = dur * (d * 0.5);
-      g.style.setProperty("--anim_dur", `${T}s`);
+  // Listen to products, featured, topProduct
+  useEffect(() => {
+    const unsubProducts = onSnapshot(productsRef, snap => {
+      const allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setProducts(allProducts);
+      setFilteredProducts(applyFilters(allProducts));
     });
 
-    // auto-advance new_group: scroll to next card every 5s
-    const nugroups = Array.from(root.querySelectorAll(".new_group"));
-    const intervals = [];
-    const resizeHandlers = [];
+    const unsubFeatured = onSnapshot(featuredQuery, snap => {
+      setFeatured(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
 
-    nugroups.forEach((g) => {
-      const items = Array.from(g.querySelectorAll(".card"));
-      if (!items.length) return;
-
-      const style = getComputedStyle(g);
-      const gap = parseFloat(style.gap) || parseFloat(style.columnGap) || 16;
-
-      // compute item width (including gap)
-      let itemWidth = Math.round(items[0].getBoundingClientRect().width + gap);
-      let index = 0;
-      const count = items.length;
-
-      // ensure start position
-      g.scrollLeft = 0;
-
-      const advance = () => {
-        index = (index + 1) % count;
-        g.scrollTo({ left: index * itemWidth, behavior: "smooth" });
-      };
-
-      const id = setInterval(advance, 5000);
-      intervals.push(id);
-
-      // recompute itemWidth on resize
-      const onResize = () => {
-        const first = g.querySelector(".card");
-        if (first) {
-          const rect = first.getBoundingClientRect();
-          itemWidth = Math.round(rect.width + gap);
-        }
-      };
-      window.addEventListener("resize", onResize);
-      resizeHandlers.push(onResize);
+    const unsubTop = onSnapshot(topQuery, snap => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setTopProduct(docs[0] || null);
     });
 
     return () => {
-      intervals.forEach((id) => clearInterval(id));
-      resizeHandlers.forEach((h) => window.removeEventListener("resize", h));
+      unsubProducts(); unsubFeatured(); unsubTop();
     };
   }, []);
 
+  // Filter logic
+  const applyFilters = (allProducts) => allProducts.filter(p => {
+    if (collections.length && !collections.includes(p.collection)) return false;
+    if (tags.length && !p.tags?.some(tag => tags.includes(tag))) return false;
+    if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
+    return true;
+  });
+
+  useEffect(() => {
+    setFilteredProducts(applyFilters(products));
+  }, [collections, tags, priceRange, products]);
+
+  const handleAddToCart = (product) => addToCart(product);
+
+  // Save updated collections/tags from EditFiltersModal
+  const saveFilters = async (newCollections, newTags) => {
+    setAvailableCollections(newCollections);
+    setAvailableTags(newTags);
+    await setDoc(doc(db, "storeData", "main"), {
+      collections: newCollections,
+      tags: newTags
+    }, { merge: true });
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Store</title>
-      </Helmet>
-
-      <div ref={rootRef}>
-        <div>Featured</div>
-
-        <div className="carousel">
-          <div className="group">
-            <div className="F-card">Item 1</div>
-            <div className="F-card">Item 2</div>
-            <div className="F-card">Item 3</div>
-            <div className="F-card">Item 4</div>
-            <div className="F-card">Item 5</div>
-          </div>
-          <div aria-hidden className="group">
-            <div className="F-card">Item 1</div>
-            <div className="F-card">Item 2</div>
-            <div className="F-card">Item 3</div>
-            <div className="F-card">Item 4</div>
-            <div className="F-card">Item 5</div>
-          </div>
-        </div>
-
-        <div>New Collection</div>
-
-        <section className="B_group">
-            <div className="B-card">Item 1</div>
-            
-        </section>
-          
-        
-
-        <div>Products</div>
-
-        {grid ? (
-          <section>
-            <section className="product_grid">
-              <div className="card">Item 1</div>
-              <div className="card">Item 2</div>
-              <div className="card">Item 3</div>
-              <div className="card">Item 4</div>
-              <div className="card">Item 5</div>
-              <div className="card">Item 6</div>
-              <div className="card">Item 1</div>
-              <div className="card">Item 2</div>
-              <div className="card">Item 3</div>
-              <div className="card">Item 4</div>
-              <div className="card">Item 5</div>
-              <div className="card">Item 6</div>
-            </section>
-          </section>
-        ) : (
-          <section className="product_list">
-            <div className="card">Item 1</div>
-            <div className="card">Item 2</div>
-            <div className="card">Item 3</div>
-            <div className="card">Item 4</div>
-            <div className="card">Item 5</div>
-            <div className="card">Item 6</div>
-            <div className="card">Item 1</div>
-            <div className="card">Item 2</div>
-            <div className="card">Item 3</div>
-            <div className="card">Item 4</div>
-            <div className="card">Item 5</div>
-            <div className="card">Item 6</div>
-          </section>
+       {showAddProduct && (
+          <AddProduct
+            onClose={() => setShowAddProduct(false)}
+            collectionOptions={availableCollections}
+            tagOptions={availableTags}
+          />
         )}
-        <div className="gap">gap</div>
+      <div className="page-container" ref={rootRef}>
+        <Carousel featured={featured} isAdmin={isAdmin} />
 
-        <ShopBar grid={grid} setGrid={setGrid} />
+        <h2 style={{textAlign:"center"}}>Store Favourite</h2>
+          {topProduct && (
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+              position: "relative",
+              maxHeight:"60vh"
+            }}> 
+        <ProductCard
+          key={topProduct.id}
+          product={topProduct}
+          isExpanded={expandedProductId === topProduct.id}
+          onExpand={(p) => setExpandedProductId(p.id)}
+          onClose={() => setExpandedProductId(null)}
+          onAddToCart={handleAddToCart}
+          isAdmin={isAdmin}
+          ownOutsideClick={false}       // <-- prevent modal closing on outside click
+          collectionOptions={availableCollections}
+          tagOptions={availableTags}
+          editFeaturedMode={editFeaturedMode}   
+          grid={false}               
+        />
+        </div>
+       
+      )}
+
+
+
+        {isAdmin && (
+          <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "center" }}>
+            <button  className="Admin_button" onClick={() => setShowAddProduct(prev => !prev)}>
+              {showAddProduct ? "Close Add Product" : "Add Product"}
+            </button>
+
+            <button  className="Admin_button" onClick={() => setEditFeaturedMode(prev => !prev)}>
+              {editFeaturedMode ? "Exit Featured Edit Mode" : "Edit Featured Products"}
+            </button>
+
+          </div>
+        )}
+
+       
+
+        <EditFiltersModal
+          open={editFiltersOpen}
+          onClose={() => setEditFiltersOpen(false)}
+          collections={availableCollections}
+          setCollections={setAvailableCollections}
+          tags={availableTags}
+          setTags={setAvailableTags}
+          saveFilters={saveFilters}
+        />
+
+        <h2 style={{ marginTop: 30, textAlign:"center" }}>Products</h2>
+        <div style={{
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+              position: "relative",
+              maxHeight:"60vh"
+            }}> 
+        {filteredProducts.length ? (
+          <section className={grid ? "product_grid" : "product_list"}>
+            {filteredProducts.map(p => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                isExpanded={expandedProductId === p.id}
+                onExpand={(p) => setExpandedProductId(p.id)}
+                onClose={() => setExpandedProductId(null)}
+                onAddToCart={handleAddToCart}
+                isAdmin={isAdmin}
+                ownOutsideClick
+                collectionOptions={availableCollections}
+                tagOptions={availableTags}
+                editFeaturedMode={editFeaturedMode}
+              />
+            ))}
+
+          </section>
+        ) : <section className="center">No products match the filters</section>}
+        </div>
+        
       </div>
+      <div style={{ height: "11vh" }}></div>
+      <ShopBar
+        grid={grid}
+        setGrid={setGrid}
+        cartCount={cart.length}
+        collections={collections}
+        setCollections={setCollections}
+        tags={tags}
+        setTags={setTags}
+        priceRange={priceRange}
+        setPriceRange={setPriceRange}
+        filtersOpen={filtersOpen}
+        toggleFilters={() => setFiltersOpen(prev => !prev)}
+        isAdmin={isAdmin}
+        availableCollections={availableCollections}
+        availableTags={availableTags}
+      />
     </>
   );
 }
-// ...existing code...

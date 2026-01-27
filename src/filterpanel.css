@@ -1,0 +1,210 @@
+@import url(./styles.css);
+
+.FILTERBAH {
+  z-index: 1000;
+  position: fixed;
+  bottom: 10dvh;
+  left: 0;
+  right: 0;
+  max-width: 50%;
+  background-color: var(--top);
+  backdrop-filter: blur(var(--blur));
+  border-radius: 1dvw;
+  padding: 1dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 1dvh;
+  font-family: 'NORM', sans-serif;
+  color: var(--FA-color);
+}
+
+
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr; /* title | controls */
+  gap: 1.5dvh;
+  align-items: center;
+  color: var(--FA-color);
+}
+
+.grid{
+  display: grid;
+  grid-template-columns: auto auto auto; 
+  justify-content: space-evenly;
+  gap: 1.5dvh;
+  align-items: center;
+  height: fit-content;
+}
+
+.filter-section {
+  display: contents;
+}
+
+.filter-section h4 {
+  font-family: 'F25', Arial, sans-serif;
+  color: white;
+  margin: 0;
+  align-self: center;
+}
+
+/* Controls column */
+.filter-options {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.filter-button {
+  width: 100%;
+  padding: 0.5em 1em;
+  text-align: left;
+  border: none;
+  border-radius: 0.5dvw;
+  background-color: var(--bg);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.filter-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.filter-button.selected {
+  background-color: rgba(0, 128, 0, 0.5);
+  color: black;
+}
+
+/* Dropup options */
+.dropdown-options {
+  position: absolute;
+  bottom: 100%; /* opens upwards */
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.9);
+  border: 1px solid #444;
+  border-radius: 0.5dvw;
+  padding: 0.5em;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+}
+
+.dropdown-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: white;
+}
+
+/* Price inputs */
+.price-inputs {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.price-inputs input {
+  width: 70px;
+  padding: 0.3em 0.5em;
+  border-radius: 0.3em;
+  border: 1px solid #ccc;
+}
+
+.edit-filter-panel{
+  position: fixed;
+  bottom: 12vh;
+  transform: none; /* remove translateX */
+  background-color: var(--top);
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  width: fit-content;
+  height: fit-content;
+  z-index: 99;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  backdrop-filter: blur(var(--blur));
+  grid-column: 3;
+  right: 0;
+  margin-right: 10px;
+  font-family: 'F25';
+  color: var(--FA-color);
+}
+
+.edit-filter-panel input, select, textarea{
+  font-family: 'F25';
+  color: var(--FA-color);
+}
+
+.filter-panel {
+  position: fixed;
+  bottom: 12dvh;
+  left: 1dvw; /* base left padding from edge */
+  transform: none; /* remove translateX */
+  background-color: var(--top);
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: fit-content;
+  max-height: 90%;
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  backdrop-filter: blur(var(--blur));
+  font-family: 'F25';
+}
+
+.filter-panel-del{ 
+  mix-blend-mode: normal;
+  color: red;
+  background-color: transparent;
+  border-radius: 8%;
+  border-color: rgba(255, 0, 0, 0.544);
+  border-style: solid;
+}
+
+.filter-panel-close{ 
+  mix-blend-mode: normal;
+  color: red;
+  background-color: transparent;
+  border-radius: 8%;
+  border-color: rgb(255, 0, 0);
+  border-style: solid;
+}
+
+.filter-panel-add{ 
+  mix-blend-mode: normal;
+  color: rgb(0, 255, 136);
+  background-color: transparent;
+  border-radius: 8%;
+  border-color: rgba(0, 255, 136, 0.608);
+  border-style: solid;
+}
+
+.filter-panel  button:active{ 
+  mix-blend-mode: soft-light ;
+  color: var(--FA-color);
+}
+
+@media (max-width: 600px) {
+  .filter-panel{
+    width: fit-content;
+    bottom: 8vh;
+  }
+  .grid{
+  display: grid;
+  grid-template-columns: auto auto 0.6fr; 
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 9999;
+  }
+  .edit-filter-panel{
+    bottom: 8vh;
+  }
+}

@@ -6,14 +6,24 @@ function page () {
   return (
     <>
     <Helmet>
-      <title>TEST</title>
+      <title>Hello there</title>
     </Helmet>
+
     
-    <section> 
-      
+    <section className="paywall"> 
+      <h1>Maxx Bassett</h1>
+      <p>Bank : Capitec</p>
+       <p>Account Name : MR M BASSETT</p>
+       <p>Account Number : 2017370270</p>
+    </section>
+
+    <section className="paywall2"> 
+      <h1>Maxx Bassett</h1>
+      <p>Bank : Capitec</p>
+       <p>Account Name : MR M BASSETT</p>
+       <p>Account Number : 2017370270</p>
     </section>
     
-    <About/>
     </> 
   )
 

@@ -1,0 +1,298 @@
+@font-face {
+  font-family: 'SSF';
+  src: url('./components/Fonts/SuperShiny-0v0rG.ttf');
+}
+
+@font-face {
+  font-family: 'NORM';
+  src: url('./components/Fonts/MouldyCheeseRegular-WyMWG.ttf');
+}
+
+@font-face {
+  font-family: 'F25';
+  src: url('./components/Fonts/F25_Bank_Printer.ttf');
+}
+
+@font-face {
+  font-family: 'RANDA';
+  src: url('./components/Fonts/MyRandaSymbols.ttf');
+}
+
+@font-face {
+  font-family: 'prole';
+  src: url('./components/Fonts/ProleDerose-PVxeP.otf');
+  font-weight: bolder;
+  font-display:block;
+}
+
+
+@import url(./styles.css);
+
+
+.grid-icon {
+  --gap: 4px;
+  --dot-size: 6px;
+  --line-height: 4px;
+  --icon-size: 24px;
+  --color: var(--A-color);
+  --radius: 2px;
+  --speed: 260ms;
+  --row-offset: 12px;
+  --col-offset: -12px;
+
+  width: var(--icon-size);
+  height: var(--icon-size);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Base dots/bars */
+.grid-icon span {
+  position: absolute;
+  background: var(--color);
+  border-radius: var(--radius);
+  transition:
+    transform var(--speed) ease,
+    width var(--speed) ease,
+    height var(--speed) ease,
+    opacity var(--speed) ease;
+}
+
+
+/* ====================================================
+   LIST MODE — 3 bars
+   ==================================================== */
+.grid-icon.list span {
+  opacity: 1;
+  width: 110%;
+  height: 3px;
+}
+
+/* 3 bars vertically spaced */
+.grid-icon.list span:nth-child(1) {
+  transform: translateY(-12px);
+}
+
+.grid-icon.list span:nth-child(2) {
+  transform: translateY(0);
+}
+
+.grid-icon.list span:nth-child(3) {
+  transform: translateY(12px);
+}
+
+/* Hide 4–9 BUT keep transform matching grid positions
+   (this is what allows true reversing of animation) */
+.grid-icon.list span:nth-child(4) {
+  transform: translate(0px, calc(-1 * var(--row-offset))) scale(0.5);
+  opacity: 0;
+  transition-delay: 40ms;
+}
+
+.grid-icon.list span:nth-child(5) {
+  transform: translate(0px, 0px) scale(0.5);
+  opacity: 0;
+  transition-delay: 80ms;
+}
+
+.grid-icon.list span:nth-child(6) {
+  transform: translate(0px, var(--row-offset)) scale(0.5);
+  opacity: 0;
+  transition-delay: 120ms;
+}
+
+.grid-icon.list span:nth-child(7) {
+  transform: translate(var(--row-offset), calc(-1 * var(--row-offset))) scale(0.5);
+  opacity: 0;
+  transition-delay: 160ms;
+}
+
+.grid-icon.list span:nth-child(8) {
+  transform: translate(var(--row-offset), 0px) scale(0.5);
+  opacity: 0;
+  transition-delay: 200ms;
+}
+
+.grid-icon.list span:nth-child(9) {
+  transform: translate(var(--row-offset), var(--row-offset)) scale(0.5);
+  opacity: 0;
+  transition-delay: 240ms;
+}
+
+
+/* ====================================================
+   GRID MODE — 9 dots
+   ==================================================== */
+.grid-icon.grid span {
+  width: var(--line-height);
+  height: var(--line-height);
+  opacity: 1;
+}
+
+/* transform bars into the left column of grid */
+.grid-icon.grid span:nth-child(1) {
+  transform: translate(var(--col-offset), calc(-1 * var(--row-offset)));
+}
+
+.grid-icon.grid span:nth-child(2) {
+  transform: translate(var(--col-offset), 0px);
+  transition-delay: 1.5ms;
+}
+
+.grid-icon.grid span:nth-child(3) {
+  transform: translate(var(--col-offset), var(--row-offset));
+  transition-delay: 3ms;
+}
+
+/* Reveal dots 4–9 sequentially */
+.grid-icon.grid span:nth-child(4) {
+  transform: translate(0px, calc(-1 * var(--row-offset))) scale(1);
+  transition-delay: 6ms;
+}
+
+.grid-icon.grid span:nth-child(5) {
+  transform: translate(0px, 0px) scale(1);
+  transition-delay: 12ms;
+}
+
+.grid-icon.grid span:nth-child(6) {
+  transform: translate(0px, var(--row-offset)) scale(1);
+  transition-delay: 18ms;
+}
+
+.grid-icon.grid span:nth-child(7) {
+  transform: translate(var(--row-offset), calc(-1 * var(--row-offset))) scale(1);
+  transition-delay: 24ms;
+}
+
+.grid-icon.grid span:nth-child(8) {
+  transform: translate(var(--row-offset), 0px) scale(1);
+  transition-delay: 30ms;
+}
+
+.grid-icon.grid span:nth-child(9) {
+  transform: translate(var(--row-offset), var(--row-offset)) scale(1);
+  transition-delay: 36ms;
+}
+
+/*/////////////////////////////////////////////////////////////////////////////////*/
+/* ------------------------------- */
+/* FILTER ICON — MATCHED TO GRID   */
+/* ------------------------------- */
+
+.filter-icon {
+  --gap: 8px;
+  --dot-size: 4px;
+  --line-height: 3px;
+  --icon-size: 24px;
+  --color: var(--A-color);
+  --radius: 2px;
+  --speed: 260ms;
+  --col-offset: 10px;
+  --row-offset: 10px;
+
+  width: var(--icon-size);
+  height: var(--icon-size);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.filter-icon span {
+  position: absolute;
+  background: var(--color);
+  border-radius: var(--radius);
+  transition:
+    transform var(--speed) ease,
+    width var(--speed) ease,
+    height var(--speed) ease,
+    opacity var(--speed) ease;
+}
+
+/* ====================================================
+   CLOSED STATE – 3-bar “filter funnel”
+   ==================================================== */
+.filter-icon:not(.open) span {
+  opacity: 1;
+  width: 110%;
+  height: var(--line-height);
+}
+
+/* top / middle / bottom bars */
+.filter-icon:not(.open) span:nth-child(1) {
+  transform: translateY(-9px);
+}
+.filter-icon:not(.open) span:nth-child(2) {
+  transform: translateY(0px);
+  width: 70%;
+}
+.filter-icon:not(.open) span:nth-child(3) {
+  transform: translateY(9px);
+  width: 40%;
+}
+
+/* Hidden right-side lines (reverse animation support) */
+.filter-icon:not(.open) span:nth-child(4) {
+  opacity: 0;
+  transform: translate(var(--col-offset), -9px) scale(0.4);
+}
+.filter-icon:not(.open) span:nth-child(5) {
+  opacity: 0;
+  transform: translate(var(--col-offset), 0px) scale(0.4);
+}
+.filter-icon:not(.open) span:nth-child(6) {
+  opacity: 0;
+  transform: translate(var(--col-offset), 9px) scale(0.4);
+}
+
+/* ====================================================
+   OPEN STATE – Left dots + Right sliding bars
+   ==================================================== */
+.filter-icon.open span {
+  opacity: 1;
+}
+
+/* left column dots */
+.filter-icon.open span:nth-child(1),
+.filter-icon.open span:nth-child(2),
+.filter-icon.open span:nth-child(3) {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+}
+
+/* vertical positions for left dots */
+.filter-icon.open span:nth-child(1) { transform: translateX(calc(-1 * var(--col-offset))) translateY(-9px); }
+.filter-icon.open span:nth-child(2) { transform: translateX(calc(-1 * var(--col-offset))) translateY(0); }
+.filter-icon.open span:nth-child(3) { transform: translateX(calc(-1 * var(--col-offset))) translateY(9px); }
+
+/* right column bars */
+.filter-icon.open span:nth-child(4),
+.filter-icon.open span:nth-child(5),
+.filter-icon.open span:nth-child(6) {
+  width: 0;
+  height: var(--line-height);
+  border-radius: var(--radius);
+  transform-origin: left center; /* expand from left edge */
+  background: var(--color);
+  animation: growBar 26ms forwards ease;
+  animation-fill-mode: forwards;
+  right: var(--col-offset)*-1;
+}
+
+/* vertical positions for right bars */
+.filter-icon.open span:nth-child(4) { transform: translateX(var(--col-offset)) translateY(-9px); animation-delay: 120ms; }
+.filter-icon.open span:nth-child(5) { transform: translateX(var(--col-offset)) translateY(0); animation-delay: 150ms; }
+.filter-icon.open span:nth-child(6) { transform: translateX(var(--col-offset)) translateY(9px); animation-delay: 160ms; }
+
+/* growBar keyframes only animates width */
+@keyframes growBar {
+  0% { width: 0; }
+  100% { width: 20px; }
+}
+
