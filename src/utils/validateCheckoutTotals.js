@@ -38,7 +38,7 @@ export async function validateCheckoutTotal(storeId, cart) {
     // Push line item for frontend or backend
     lineItems.push({
       productId: item.productId,
-      name: product.name,
+      productName: product.name || product.title || `Product ${item.productId}`,
       price: (priceCents / 100).toFixed(2),       // string decimal for PayFast
       quantity: qty,
       qty,

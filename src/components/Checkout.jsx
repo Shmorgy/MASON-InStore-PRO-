@@ -57,31 +57,42 @@ export default function Checkout() {
     setLoading(true);
 
     try {
-      const backendCart = normalizedCart.map((item) => ({
-        productId: item.id || item.productId,
-        qty: item.qty,
-        price: +(item.priceCents / 100).toFixed(2),
-        lineTotal: +(item.lineTotalCents / 100).toFixed(2),
-      }));
+      // Prepare cart for validation - include productId
+        const cartForValidation = normalizedCart.map((item) => ({
+          productId: item.id || item.productId,
+          qty: item.qty,
+        }));
 
-      await validateCheckoutTotal(storeID, backendCart);
+        // Validate and get line items with proper product names from database
+        const validationResult = await validateCheckoutTotal(storeID, cartForValidation);
 
-      const payload = {
-        storeId: storeID,
-        clientId: clientID,
-        cart: backendCart,
-        customer: {
-          email,
-          uid: user?.uid || null,
-          firstName,
-          lastName,
-          cell,
-        },
-        delivery: method === "Delivery" ? { method, address } : { method },
-        paymentMethod,
-        sandbox: false, // Changed to true for testing
-        storeurl : window.location.origin,
-      };
+        console.log("Validation result:", validationResult);
+
+      // Use the validated line items (which include product names from the database)
+        const backendCart = validationResult.lineItems.map((item) => ({
+          productName: item.productName,
+          productId: item.productId,
+          qty: item.qty,
+          price: Number(item.price),
+          lineTotal: Number(item.lineTotal),
+        }));
+
+        const payload = {
+          storeId: storeID,
+          clientId: clientID,
+          cart: backendCart,
+          customer: {
+            email,
+            uid: user?.uid || null,
+            firstName,
+            lastName,
+            cell,
+          },
+          delivery: method === "Delivery" ? { method, address } : { method },
+          paymentMethod,
+          sandbox: false, // Changed to true for testing
+          storeurl : window.location.origin,
+        };
 
       if (paymentType === "subscription") {
         payload.subscription = {

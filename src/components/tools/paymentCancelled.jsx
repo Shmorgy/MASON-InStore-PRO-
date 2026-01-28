@@ -1,100 +1,76 @@
 import React, { useEffect, useState } from 'react';
-import { functions } from '../../firebase';
-import { httpsCallable } from 'firebase/functions';
+import { useNavigate } from 'react-router-dom';
 
 export default function PaymentCancelled() {
   const [orderId, setOrderId] = useState(null);
-  const [status, setStatus] = useState('processing');
-  const [message, setMessage] = useState('Processing cancellation...');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('orderId');
     setOrderId(id);
 
+    // Log the cancellation for reference
     if (id) {
-      cancelOrder(id);
-    } else {
-      setStatus('cancelled');
-      setMessage('Your payment was cancelled. No charges have been made.');
+      const cancelledOrders = JSON.parse(localStorage.getItem('cancelledOrders') || '[]');
+      if (!cancelledOrders.includes(id)) {
+        cancelledOrders.push(id);
+        localStorage.setItem('cancelledOrders', JSON.stringify(cancelledOrders.slice(-10))); // Keep last 10
+      }
+      console.log('Payment cancelled for order:', id);
     }
   }, []);
-
-  const cancelOrder = async (orderId) => {
-    try {
-      // Call server-side function to cancel order
-      const cancelOrderFn = httpsCallable(functions, 'cancelOrder');
-      const result = await cancelOrderFn({ orderId });
-
-      if (result.data.success) {
-        setStatus('cancelled');
-        setMessage('Your payment was cancelled. No charges have been made.');
-      }
-    } catch (error) {
-      console.error('Error cancelling order:', error);
-      
-      // Still show as cancelled to user (they didn't pay)
-      // But log the error for admin investigation
-      setStatus('cancelled');
-      setMessage('Your payment was cancelled. No charges have been made.');
-      
-      if (error.code === 'functions/not-found') {
-        console.warn('Order not found in system:', orderId);
-      } else {
-        console.warn('Failed to update order status:', error.message);
-      }
-    }
-  };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        {status === 'processing' && (
-          <>
-            <div style={styles.spinner}></div>
-            <h1 style={styles.heading}>Processing Cancellation</h1>
-            <p style={styles.message}>{message}</p>
-          </>
+        <div style={styles.warningIcon}>!</div>
+        
+        <h1 style={styles.heading}>Payment Cancelled</h1>
+        
+        <p style={styles.message}>
+          Your payment was cancelled. No charges have been made to your account.
+        </p>
+
+        {orderId && (
+          <div style={styles.orderInfo}>
+            <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+              <strong>Order ID:</strong> {orderId}
+            </p>
+            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#666' }}>
+              This order has been cancelled and will not be processed.
+            </p>
+          </div>
         )}
 
-        {status === 'cancelled' && (
-          <>
-            <div style={styles.warningIcon}>!</div>
-            <h1 style={styles.heading}>Payment Cancelled</h1>
-            <p style={styles.message}>{message}</p>
-            {orderId && (
-              <p style={{ fontSize: '14px', color: '#999', marginBottom: '24px' }}>
-                Order ID: {orderId}
-              </p>
-            )}
-            <button 
-              onClick={() => window.location.href = '/checkout'} 
-              style={styles.button}
-            >
-              Return to Checkout
-            </button>
-            <button 
-              onClick={() => window.location.href = '/'} 
-              style={{ ...styles.button, background: '#999', marginLeft: '12px' }}
-            >
-              Go to Home
-            </button>
-          </>
-        )}
+        <div style={styles.infoBox}>
+          <p style={{ margin: 0, fontSize: '14px' }}>
+            💡 Your cart items have been saved. You can return to checkout to complete your purchase.
+          </p>
+        </div>
 
-        {status === 'error' && (
-          <>
-            <div style={styles.errorIcon}>✕</div>
-            <h1 style={styles.heading}>Error</h1>
-            <p style={styles.message}>{message}</p>
-            <button 
-              onClick={() => window.location.href = '/'} 
-              style={styles.button}
-            >
-              Return to Home
-            </button>
-          </>
-        )}
+        <div style={styles.buttonGroup}>
+          <button 
+            onClick={() => navigate('/checkout')} 
+            style={styles.primaryButton}
+          >
+            Return to Checkout
+          </button>
+          
+          <button 
+            onClick={() => navigate('/')} 
+            style={styles.secondaryButton}
+          >
+            Continue Shopping
+          </button>
+        </div>
+
+        <button 
+          onClick={() => navigate('/orders')} 
+          style={styles.linkButton}
+        >
+          View My Orders
+        </button>
       </div>
     </div>
   );
@@ -107,7 +83,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px',
-    background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)'
+    background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)'
   },
   card: {
     background: 'rgba(255, 255, 255, 0.95)',
@@ -131,15 +107,6 @@ const styles = {
     marginBottom: '24px',
     lineHeight: '1.6'
   },
-  spinner: {
-    width: '60px',
-    height: '60px',
-    border: '4px solid #f3f3f3',
-    borderTop: '4px solid #667eea',
-    borderRadius: '50%',
-    margin: '0 auto 24px',
-    animation: 'spin 1s linear infinite'
-  },
   warningIcon: {
     width: '80px',
     height: '80px',
@@ -151,39 +118,60 @@ const styles = {
     margin: '0 auto 24px',
     fontWeight: 'bold'
   },
-  errorIcon: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    background: '#f44336',
-    color: 'white',
-    fontSize: '48px',
-    lineHeight: '80px',
-    margin: '0 auto 24px',
-    fontWeight: 'bold'
+  orderInfo: {
+    background: '#fff3e0',
+    borderLeft: '4px solid #ff9800',
+    borderRadius: '4px',
+    padding: '16px',
+    marginBottom: '20px',
+    textAlign: 'left'
   },
-  button: {
-    background: '#667eea',
+  infoBox: {
+    background: '#e3f2fd',
+    borderLeft: '4px solid #2196F3',
+    borderRadius: '4px',
+    padding: '12px',
+    marginBottom: '24px',
+    textAlign: 'left'
+  },
+  buttonGroup: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '12px'
+  },
+  primaryButton: {
+    flex: 1,
+    background: '#ff9800',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
-    padding: '12px 32px',
+    padding: '12px 24px',
     fontSize: '16px',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '24px',
     transition: 'background 0.2s'
+  },
+  secondaryButton: {
+    flex: 1,
+    background: 'transparent',
+    color: '#ff9800',
+    border: '2px solid #ff9800',
+    borderRadius: '8px',
+    padding: '12px 24px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  linkButton: {
+    background: 'transparent',
+    color: '#667eea',
+    border: 'none',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    padding: '8px',
+    textDecoration: 'underline',
+    transition: 'color 0.2s'
   }
 };
-
-// Add CSS for spinner animation
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = `
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(styleSheet);
-}

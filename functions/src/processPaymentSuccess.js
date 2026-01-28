@@ -14,7 +14,7 @@ export const processPaymentSuccess = onCall(
     timeoutSeconds: 60,
     memory: "256MiB",
     minInstances: 0,
-    maxInstances: 100
+    maxInstances: 10
   },
   async (req) => {
     const requestId = `PS-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -149,8 +149,8 @@ export const processPaymentSuccess = onCall(
               previousStock: currentStock,
               newStock,
               quantityDeducted: qty,
-              productName: product.name || name || "Unknown",
-              variantName: variant.name || variant.title || "Unknown"
+              productName: product.productName || "Unknown",
+              variantName: variant.variantName || "Unknown"
             });
 
             console.log(
@@ -174,7 +174,7 @@ export const processPaymentSuccess = onCall(
               previousStock: currentStock,
               newStock,
               quantityDeducted: qty,
-              productName: product.name || name || "Unknown"
+              productName: product.productName || "Unknown"
             });
 
             console.log(
@@ -274,7 +274,7 @@ export async function validateStockAvailability(
   const stockIssues = [];
 
   for (const item of cart) {
-    const { productId, variantId, qty, name } = item;
+    const { productId, variantId, qty, productName } = item;
 
     if (!productId) {
       stockIssues.push({
@@ -307,7 +307,7 @@ export async function validateStockAvailability(
         stockIssues.push({
           productId,
           variantId,
-          productName: name || "Unknown",
+          productName: productName || "Unknown",
           issue: "Product not found"
         });
         continue;
@@ -323,7 +323,7 @@ export async function validateStockAvailability(
           stockIssues.push({
             productId,
             variantId,
-            productName: product.name || name || "Unknown",
+            productName: product.productName || "Unknown",
             issue: "Variant not found"
           });
           continue;
@@ -335,8 +335,8 @@ export async function validateStockAvailability(
           stockIssues.push({
             productId,
             variantId,
-            productName: product.name || name || "Unknown",
-            variantName: variant.name || variant.title || "Unknown",
+            productName: product.productName || "Unknown",
+            variantName: variant.variantName || variant.title || "Unknown",
             requested: qty,
             available: availableStock,
             issue: "Insufficient stock"
@@ -349,7 +349,7 @@ export async function validateStockAvailability(
         if (availableStock < qty) {
           stockIssues.push({
             productId,
-            productName: product.name || name || "Unknown",
+            productName: product.productName || "Unknown",
             requested: qty,
             available: availableStock,
             issue: "Insufficient stock"

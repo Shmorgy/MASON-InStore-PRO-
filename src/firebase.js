@@ -7,8 +7,15 @@ import { getFunctions } from "firebase/functions";
 // -----------------------------
 // Defaults / IDs
 // -----------------------------
-export const clientID = "imaan";
-export const storeID = "mason";
+
+// cID = Client ID and must be lowercase
+// sID = Store ID and must be literal, hence `${}`
+
+export const cID = "imaanjade@gmail.com";
+export const sID = "MASON";
+
+export const clientID = `${cID}`;
+export const storeID = `${sID}`;
 
 // -----------------------------
 // Template Firebase App
