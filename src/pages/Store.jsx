@@ -171,12 +171,14 @@ export default function Store() {
               justifyContent: "center",
               width: "100%",
               position: "relative",
-              maxHeight:"60vh"
+              maxHeight:"max-content",
+              paddingBottom:"10vh"
             }}> 
         {filteredProducts.length ? (
           <section className={grid ? "product_grid" : "product_list"}>
             {filteredProducts.map(p => (
               <ProductCard
+                grid={grid}
                 key={p.id}
                 product={p}
                 isExpanded={expandedProductId === p.id}
@@ -194,9 +196,11 @@ export default function Store() {
           </section>
         ) : <section className="center">No products match the filters</section>}
         </div>
-        
+       
       </div>
-      <div style={{ height: "11vh" }}></div>
+
+       <div style={{ WebkitTextStroke:"0.15px black" ,color: "var(--FA-color)" ,width:"100vw", textAlign: "center", zIndex: "0", position:"relative",marginBottom:"10vh" }}>© 2026 ITC. All payments are processed securely via PayFast. ITC is the Merchant of Record for all transactions.</div>
+     
       <ShopBar
         grid={grid}
         setGrid={setGrid}
@@ -213,6 +217,7 @@ export default function Store() {
         availableCollections={availableCollections}
         availableTags={availableTags}
       />
+       
     </>
   );
 }

@@ -132,12 +132,12 @@
   grid-column: 3;
   right: 0;
   margin-right: 10px;
-  font-family: 'F25';
+  font-family:var(--font-text);
   color: var(--FA-color);
 }
 
 .edit-filter-panel input, select, textarea{
-  font-family: 'F25';
+  font-family:var(--font-text);
   color: var(--FA-color);
 }
 

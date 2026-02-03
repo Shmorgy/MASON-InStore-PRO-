@@ -8,6 +8,7 @@
   height: fit-content;
   transition: transform 0.6s cubic-bezier(.16,.84,.44,1); /* snap animation */
   will-change: transform;
+  margin-top: 10px;
 }
 
 /* Magnet “snap” class (added by JS) */
@@ -19,7 +20,7 @@
 .carousel-track {
   display: flex;
   gap: 1rem;
-  height: 40vh;
+  max-height: 40vh;
   width: fit-content;
   animation: scroll-carousel 20s linear infinite;
   transition: transform 0.5s ease, scale 0.5s ease;
@@ -38,28 +39,34 @@
   background: transparent;
   transition: transform 0.3s ease;
   cursor: pointer;
-  background-color: var(--top);
+  background:  var(--top);
+  opacity: 80%;
   width: 50vh;
-  color: var(--A-color);
+  color: var(--FA-color);
   min-height: 30vh;
+  font-family: var(--font-title);
+  font-size: larger;
 }
 
 .F-card img {
     width: max-content;
-    height: auto;
+    margin-bottom: 5vh;
     overflow: auto;
     border-radius: 13px;
     color: var(--FA-color);
+
 }
 
 .product-name{
-  text-align: center;
+  text-align: bottom;
   position: relative;
-  color: var(--A-color);
+  color: var(--FB-color);
+  top:85%;
+
 }
 
 .F-card:hover {
-  transform: scale(1.01); /* small lift */
+  transform: scale(0.95); /* small lift */
 }
 
 /* --- Mobile + Tablet --- */
@@ -149,5 +156,10 @@
 @media screen and (max-width: 600px) {
   .F-card{
     max-width: fit-content;
+    max-height: fit-content;
+  }
+
+  .F-card img {
+    max-height: 60%;
   }
 }

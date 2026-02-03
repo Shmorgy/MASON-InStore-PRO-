@@ -2,15 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { db, storage } from "../firebase";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import "../productStyles.css";
 
-export default function AddProduct({
-  onClose,
-  collectionOptions = [],
-  tagOptions = []
-}) {
+export default function AddProduct({ onClose, isAdmin }) {
   const modalRef = useRef(null);
 
   const [name, setName] = useState("");
@@ -19,8 +15,11 @@ export default function AddProduct({
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [stock, setStock] = useState(0);
-  const [collections, setCollections] = useState([]);
   const [tags, setTags] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [allTags, setAllTags] = useState([]);
+  const [allColls, setAllColls] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   // ---------------- Outside click close ----------------
   useEffect(() => {
@@ -68,28 +67,40 @@ export default function AddProduct({
     onClose?.();
   };
 
-  // ---------------- Tag toggle helpers ----------------
-  const toggleValue = (value, list, setList) => {
-    setList((prev) =>
-      prev.includes(value)
-        ? prev.filter((v) => v !== value)
-        : [...prev, value]
-    );
-  };
+  // ---------------- Load filters ----------------
+  useEffect(() => {
+    if (!showFilters) return;
+    const unsub = onSnapshot(doc(db, "storeData", "filters"), (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      setAllTags(data.tags ?? []);
+      setAllColls(data.collections ?? []);
+    });
+    return () => unsub();
+  }, [showFilters]);
+
+  const fileInputRef = useRef(null);
 
   // ---------------- Modal content ----------------
   const modalContent = (
     <div className="product-modal show">
-      <div ref={modalRef} className="product-modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close-btn" onClick={onClose}>✕</button>
+      <div
+        ref={modalRef}
+        className="product-modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="modal-close-btn" onClick={onClose}>
+          ✕
+        </button>
 
         <div className="modal-grid-wrapper">
           {/* LEFT IMAGE */}
-          <img
-            className="modal-main-image"
-            src={images[0] || "/placeholder.png"}
-            alt={name || "Preview"}
-          />
+          <div className="modal-main-image">
+            <img
+              src={images[0] || "/placeholder.png"}
+              alt={name || "Preview"}
+            />
+          </div>
 
           {/* RIGHT PANEL */}
           <div className="modal-right">
@@ -99,7 +110,6 @@ export default function AddProduct({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-
             <textarea
               className="modal-description-box"
               placeholder="Product Description"
@@ -108,52 +118,120 @@ export default function AddProduct({
             />
 
             <div className="modal-info">
-              <label>Price:
-                <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+              <label>
+                Price:
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
               </label>
-              <label>Stock:
-                <input type="number" min="0" value={stock} onChange={(e) => setStock(Math.max(0, parseInt(e.target.value) || 0))} />
+              <label>
+                Stock:
+                <input
+                  type="number"
+                  min="0"
+                  value={stock}
+                  onChange={(e) =>
+                    setStock(Math.max(0, parseInt(e.target.value) || 0))
+                  }
+                />
               </label>
-            </div>
 
-            <div className="modal-info">Collections</div>
-            <div className="tag-container">
-              {collectionOptions.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`tag-btn ${collections.includes(c) ? "active" : ""}`}
-                  onClick={() => toggleValue(c, collections, setCollections)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-
-            <div className="modal-info">Tags</div>
-            <div className="tag-container">
-              {tagOptions.map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`tag-btn ${tags.includes(t) ? "active" : ""}`}
-                  onClick={() => toggleValue(t, tags, setTags)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <div >
-              <input className="modal-info" type="file" multiple onChange={(e) => handleFiles(e.target.files)} />
+              {/* Custom Upload Button */}
+            <div style={{ marginTop: "5vh", marginBottom:"-2.5vh" }}>
+              <button
+                className="modal-btn primary"
+                style={{ background: "var(--FA-color)", color: "#000000", maxWidth: "fit-content", WebkitTextStroke:"0.5px var(--accent)" }}
+                onClick={() => fileInputRef.current.click()}
+              >
+                Upload Images
+              </button>
+              <input
+                type="file"
+                multiple
+                ref={fileInputRef}
+                style={{ display: "none",  }}
+                onChange={(e) => handleFiles(e.target.files)}
+              />
               {uploading && <p>Uploading…</p>}
             </div>
 
-            
+             
+              
+            </div>
+
+            {isAdmin && (
+              <>
+                <button
+                  className="modal-btn"
+                  style={{
+                    width: "max-content",
+                    background: "black",
+                    color: "white",
+                    maxHeight: "fit-content",
+                  }}
+                  onClick={() => setShowFilters((v) => !v)}
+                >
+                  Set Filters
+                </button>
+                {showFilters && (
+                  <div className="modal-filters">
+                    <label>Tags</label>
+                    <ul className="modal-filters-text">
+                      {allTags.map((tag) => (
+                        <li key={tag}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={tags.includes(tag)}
+                              onChange={() =>
+                                setTags((prev) =>
+                                  prev.includes(tag)
+                                    ? prev.filter((t) => t !== tag)
+                                    : [...prev, tag]
+                                )
+                              }
+                            />
+                            {tag}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <label>Collections</label>
+                    <ul className="modal-filters-text">
+                      {allColls.map((coll) => (
+                        <li key={coll}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={collections.includes(coll)}
+                              onChange={() =>
+                                setCollections((prev) =>
+                                  prev.includes(coll)
+                                    ? prev.filter((c) => c !== coll)
+                                    : [...prev, coll]
+                                )
+                              }
+                            />
+                            {coll}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
 
             <div className="modal-buttons">
-              <button className="modal-btn primary" onClick={addProduct}>Add Product</button>
-              <button className="modal-btn secondary" onClick={onClose}>Cancel</button>
+              <button className="modal-btn primary" onClick={addProduct}>
+                Add Product
+              </button>
+              <button className="modal-btn secondary" onClick={onClose}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -161,6 +239,5 @@ export default function AddProduct({
     </div>
   );
 
-  // ---------------- Render as portal ----------------
   return createPortal(modalContent, document.body);
 }

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { storeID, clientID, itcFunctions } from "../firebase.js";
 import { validateCheckoutTotal } from "../utils/validateCheckoutTotals.js";
 import { httpsCallable } from "firebase/functions";
+import   getStockServiceUrl  from "./tools/getFunctionUrl.js";
 
 const createOrderFN = httpsCallable(itcFunctions, "createOrder");
 
@@ -65,7 +66,7 @@ export default function Checkout() {
 
         // Validate and get line items with proper product names from database
         const validationResult = await validateCheckoutTotal(storeID, cartForValidation);
-
+        const furl = await getStockServiceUrl();
         console.log("Validation result:", validationResult);
 
       // Use the validated line items (which include product names from the database)
@@ -92,6 +93,7 @@ export default function Checkout() {
           paymentMethod,
           sandbox: false, // Changed to true for testing
           storeurl : window.location.origin,
+          serviceFunctionUrl : furl
         };
 
       if (paymentType === "subscription") {
@@ -225,7 +227,7 @@ export default function Checkout() {
 const styles = {
   container: { 
     padding: 20, 
-    color: "#fff", 
+    color: "#000000", 
     maxWidth: 1200, 
     margin: "0 auto",
     minHeight: "80vh" 
@@ -237,12 +239,12 @@ const styles = {
     alignItems: "start"
   },
   card: {
-    background: "rgba(30,30,30,0.8)",
+    background: "rgba(255, 255, 255, 0.26)",
     backdropFilter: "blur(10px)",
     borderRadius: 12,
     padding: 24,
-    border: "1px solid rgba(255,255,255,0.1)",
-    boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+    border: "1px solid rgba(0, 0, 0, 0.1)",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.54)"
   },
   heading: { 
     marginTop: 0, 
@@ -256,7 +258,7 @@ const styles = {
     marginBottom: 5,
     marginTop: 15,
     fontSize: 14, 
-    color: "#aaa",
+    color: "#000000",
     fontWeight: "500"
   },
   input: {
@@ -266,7 +268,7 @@ const styles = {
     borderRadius: 6,
     border: "1px solid #444",
     background: "#111",
-    color: "#fff",
+    color: "#ffffff",
     fontSize: 14,
     boxSizing: "border-box",
     transition: "border-color 0.2s"
@@ -287,8 +289,8 @@ const styles = {
     padding: 10, 
     borderRadius: 6, 
     cursor: "pointer", 
-    background: "#222", 
-    color: "#fff", 
+    background: "#22222280", 
+    color: "#ffffff", 
     border: "1px solid #444",
     transition: "all 0.2s",
     fontSize: 14,
@@ -304,14 +306,14 @@ const styles = {
     textAlign: "right", 
     fontSize: 24, 
     margin: "30px 0 20px",
-    color: "#4CAF50",
+    color: 'var(--FA-color)',
     fontWeight: "700"
   },
   checkoutButton: { 
     width: "100%", 
     padding: 16, 
     borderRadius: 8, 
-    background: "linear-gradient(135deg, #0070f3 0%, #0051cc 100%)", 
+    background: "linear-gradient(135deg,var(--top) 0%, var(--accent) 100%)", 
     color: "#fff", 
     border: "none", 
     fontSize: 16,

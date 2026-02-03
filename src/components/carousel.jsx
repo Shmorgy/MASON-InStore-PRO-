@@ -140,17 +140,7 @@ export default function Carousel({ featured = [], isAdmin = false }) {
             <div key={`${p.id}-${idx}`} className="F-card" onClick={() => setSelectedProduct(p)}>
               <div className="product-name">{p.name}</div>
               <img src={p.imageUrls?.[0] || p.imageUrl || "/placeholder.png"} alt={p.name} />
-              {isAdmin && (
-                <button
-                  className="Admin_button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFeatured(p);
-                  }}
-                >
-                  Remove
-                </button>
-              )}
+              
             </div>
           ))}
         </div>

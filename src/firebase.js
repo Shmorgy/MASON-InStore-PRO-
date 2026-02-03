@@ -35,6 +35,7 @@ export const db = getFirestore(templateApp);
 export const auth = getAuth(templateApp);
 export const storage = getStorage(templateApp);
 export const functions = getFunctions(templateApp, "us-central1");
+export const projectID = templateConfig.projectId;
 
 // -----------------------------
 // ITC Firebase App
@@ -51,3 +52,4 @@ const itcConfig = {
 export const itcApp = initializeApp(itcConfig, "ITCApp");
 export const itcDb = getFirestore(itcApp);
 export const itcFunctions = getFunctions(itcApp, "us-central1");
+export const itcStorage = getStorage(itcApp );

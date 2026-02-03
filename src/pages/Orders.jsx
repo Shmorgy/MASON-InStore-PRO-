@@ -4,48 +4,51 @@ import { clientID, storeID } from "../firebase.js";
 import { httpsCallable } from "firebase/functions";
 import { itcFunctions } from "../firebase.js";
 
-// Initialize the getOrders cloud function
+// Initialize cloud functions
 const getOrdersFunction = httpsCallable(itcFunctions, "getOrders");
+const updateOrderFunction = httpsCallable(itcFunctions, "updateOrder");
+
 
 export default function OrdersPage() {
   const { isAdmin } = useAuth(); 
   const [orders, setOrders] = useState([]);
   const [showDeliveryOnly, setShowDeliveryOnly] = useState(false);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Fetch orders when component mounts or when clientID/storeID changes
+  const loadOrders = async () => {
+    if (!clientID || !storeID) {
+      setError("Client ID or Store ID is missing");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Call the cloud function to fetch orders
+      const result = await getOrdersFunction({
+        clientId: clientID,
+        storeId: storeID
+      });
+
+      console.log("Raw result:", result);
+      console.log("Orders data:", result.data);
+
+      setOrders(result.data || []);
+    } catch (err) {
+      console.error("Failed to load orders:", err);
+      setError("Failed to load orders. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadOrders = async () => {
-      if (!clientID || !storeID) {
-        setError("Client ID or Store ID is missing");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Call the cloud function to fetch orders
-        const result = await getOrdersFunction({
-          clientId: clientID,
-          storeId: storeID
-        });
-
-        console.log("Raw result:", result);
-        console.log("Orders data:", result.data);
-
-        setOrders(result.data || []);
-      } catch (err) {
-        console.error("Failed to load orders:", err);
-        setError("Failed to load orders. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadOrders();
   }, [clientID, storeID]);
 
@@ -56,11 +59,14 @@ export default function OrdersPage() {
     if (showDeliveryOnly) {
       newOrders = newOrders.filter((o) => o.deliveryOption === "Delivery");
     }
+    if (showPendingOnly) {
+      newOrders = newOrders.filter((o) => o.status === "pending");
+    }
     setFilteredOrders(newOrders);
-  }, [orders, showDeliveryOnly]);
+  }, [orders, showDeliveryOnly, showPendingOnly]);
 
-  const pendingOrders = filteredOrders.filter((o) => o.status === "pending");
-  const completedOrders = filteredOrders.filter((o) => o.status === "completed");
+  const pendingOrders = filteredOrders.filter((o) => o.payment_status === "awaiting_payment");
+  const completedOrders = filteredOrders.filter((o) => o.payment_status === "complete");
 
   if (loading) {
     return (
@@ -90,9 +96,18 @@ export default function OrdersPage() {
                 type="checkbox"
                 checked={showDeliveryOnly}
                 onChange={() => setShowDeliveryOnly((prev) => !prev)}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 8,display:"inline"}}
               />
               Show Delivery Orders Only
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={showPendingOnly}
+                onChange={() => setShowPendingOnly((prev) => !prev)}
+                style={{ marginRight: 8, display:"inline" }}
+              />
+              Show Pending Orders Only
             </label>
           </div>
         )}
@@ -107,6 +122,7 @@ export default function OrdersPage() {
                 isAdmin={isAdmin}
                 clientID={clientID}
                 storeID={storeID}
+                onUpdate={loadOrders}
               />
             ))}
           </>
@@ -124,6 +140,7 @@ export default function OrdersPage() {
                 isAdmin={isAdmin}
                 clientID={clientID}
                 storeID={storeID}
+                onUpdate={loadOrders}
               />
             ))}
           </>
@@ -137,37 +154,31 @@ export default function OrdersPage() {
   );
 }
 
-function OrderCard({ order, isAdmin, clientID, storeID }) {
+function OrderCard({ order, isAdmin, clientID, storeID, onUpdate }) {
   const [loading, setLoading] = useState(false);
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Delete order ${order.id}? This action cannot be undone.`))
-      return;
-
-    try {
-      setLoading(true);
-      // TODO: Implement delete order cloud function
-      console.log("Delete order:", order.id, clientID, storeID);
-      alert("Delete functionality not yet implemented");
-    } catch (err) {
-      console.error("Failed to delete order:", err);
-      alert("Failed to delete order. Check console.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
   const handleComplete = async () => {
     if (!window.confirm(`Mark order ${order.id} as completed?`)) return;
 
     try {
       setLoading(true);
-      // TODO: Implement update order cloud function
-      console.log("Update order:", order.id, clientID, storeID);
-      alert("Update functionality not yet implemented");
+      
+      const result = await updateOrderFunction({
+        orderId: order.id,  
+        clientId: clientID,
+        storeId: storeID,
+        fulfilled: "true"
+      });
+
+      if (result.data.success) {
+        alert("Order marked as completed");
+        onUpdate(); // Refresh the orders list
+      }
     } catch (err) {
       console.error("Failed to update order:", err);
-      alert("Failed to update order. Check console.");
+      alert(err.message || "Failed to update order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -176,15 +187,27 @@ function OrderCard({ order, isAdmin, clientID, storeID }) {
   return (
     <div style={styles.orderCard}>
       <div style={styles.orderHeader}>
-        <strong>Order ID:</strong> {order.id}{" "}
-        <span
-          style={{
-            ...styles.statusBadge,
-            backgroundColor: order.status === "pending" ? "#FFA500" : "#4CAF50",
-          }}
-        >
-          {order.status?.toUpperCase() || "PENDING"}
-        </span>
+        <div>
+          <strong>Order ID:</strong> {order.id}
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <span
+            style={{
+              ...styles.statusBadge,
+              backgroundColor: order.payment_status === "COMPLETE" ? "#4CAF50" : "#FFA500",
+            }}
+          >
+            Payment: {order.payment_status || "AWAITING"}
+          </span>
+          <span
+            style={{
+              ...styles.statusBadge,
+              backgroundColor: order.fulfilled === "true" ? "#4CAF50" : "#ff6a00",
+            }}
+          >
+            fulfilled: {order.fulfilled?.toUpperCase() || "unknown"}
+          </span>
+        </div>
       </div>
 
       <div style={styles.orderDetail}>
@@ -220,7 +243,7 @@ function OrderCard({ order, isAdmin, clientID, storeID }) {
 
       {isAdmin && (
         <div style={styles.buttonContainer}>
-          {order.status === "pending" && (
+          {order.payment_status === "awaiting_payment" && order.fulfilled === "false" && (
             <button
               onClick={handleComplete}
               disabled={loading}
@@ -231,21 +254,10 @@ function OrderCard({ order, isAdmin, clientID, storeID }) {
                 opacity: loading ? 0.6 : 1,
               }}
             >
-              {loading ? "Processing..." : "Mark Completed"}
+              {loading ? "Processing..." : "Mark Order Completed"}
             </button>
           )}
-          <button
-            onClick={handleDelete}
-            disabled={loading}
-            style={{
-              ...styles.button,
-              ...styles.deleteButton,
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            {loading ? "Processing..." : "Delete Order"}
-          </button>
+          
         </div>
       )}
     </div>
@@ -267,30 +279,42 @@ const styles = {
     maxWidth: 800,
     margin: "0 auto",
     padding: 20,
+    color:"BLACK",
+    background:"rgba(255, 255, 255, 0.14)",
+    borderRadius:"10px",
+    border:"1px solid var(--accent)"
   },
   filterContainer: {
     marginBottom: 20,
+    display:"grid"
   },
   emptyMessage: {
     textAlign: "center",
-    color: "#888",
+    color: "#ffffff",
     padding: "40px 0",
   },
   orderCard: {
     marginBottom: 10,
     padding: 15,
-    border: "1px solid #ccc",
+    border: "1px solid var(--accent)",
     borderRadius: 8,
-    backgroundColor: "#f0f8ff3a",
+    backgroundColor: "#ffffff94",
   },
   orderHeader: {
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottom: "1px solid #000000",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8
   },
   statusBadge: {
-    color: "#000",
-    padding: "2px 8px",
+    color: "#fff",
+    padding: "4px 10px",
     borderRadius: 5,
-    fontSize: "12px",
+    fontSize: "11px",
     fontWeight: "bold",
   },
   orderDetail: {
@@ -327,7 +351,7 @@ const styles = {
   },
   completeButton: {
     backgroundColor: "#4CAF50",
-    color: "#000",
+    color: "#fff",
   },
   deleteButton: {
     backgroundColor: "#FF6347",

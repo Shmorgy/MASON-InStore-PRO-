@@ -1,11 +1,12 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, onClick } from "react";
 import { createPortal } from "react-dom";
 import { getProductImage } from "../utils/getProductImage";
 import { db, storage } from "../firebase.js";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getDoc, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { triggerTextRipple } from "../hooks/useTextRipple.js";
 import "../productStyles.css";
+
 
 export default function ProductCard({
   product,
@@ -23,15 +24,22 @@ export default function ProductCard({
   const firstImage = getProductImage(product);
 
   // Editable fields
+  const [setfilters, setSetFilters] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState(product.name || "");
   const [desc, setDesc] = useState(product.desc || "");
   const [price, setPrice] = useState(product.price || 0);
   const [images, setImages] = useState(product.imageUrls || []);
+  const [currentImage, setCurrentImage] = useState(0);
+
   const [stock, setStock] = useState(product.stock ?? 0);
   const [featured, setFeatured] = useState(product.featured || false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [tags, setTags] = useState(product.tags || []);
+  const [collections, setCollections] = useState(product.collections || []);
+  const [allTags, setAllTags] = useState([]);
+  const [allColls, setAllColls] = useState([]);
 
   // Sync local state with product updates
   useEffect(() => {
@@ -41,11 +49,35 @@ export default function ProductCard({
     setImages(product.imageUrls || []);
     setStock(product.stock ?? 0);
     setFeatured(product.featured || false);
+    setTags(product.tags || [] );
+    setCollections(product.collections || []);
+    setCurrentImage(0);
   }, [product]);
+  
+  
 
-  // Close modal on outside click
+
+
+
+
   useEffect(() => {
-    if (!isExpanded || !ownOutsideClick) return;
+      if (!isExpanded) return;
+
+      const unsub = onSnapshot(doc(db, "storeData", "filters"), snap => {
+        if (!snap.exists()) return; 
+        const data = snap.data();
+        setAllTags(data.tags ?? []);
+        setAllColls(data.collections ?? []);
+
+      }
+      );
+      return () => unsub();
+    }, [isExpanded]);
+
+
+  useEffect(() => {
+      if (!isExpanded || !ownOutsideClick) return;
+
 
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
@@ -80,7 +112,9 @@ export default function ProductCard({
       price: parseFloat(price),
       stock: Math.max(0, parseInt(stock)),
       featured,
-      imageUrls: images
+      imageUrls: images,
+      tags,
+      collections
     });
 
     alert("Saved!");
@@ -112,6 +146,9 @@ export default function ProductCard({
     }
   };
 
+  const prevImage = () => setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
+  const nextImage = () => setCurrentImage((prev) => (prev + 1) % images.length);
+
   // Modal content
   const modalContent = isExpanded && (
     <div className="product-modal show">
@@ -120,8 +157,19 @@ export default function ProductCard({
 
         <div className="modal-grid-wrapper">
           {/* LEFT IMAGE */}
-          <img className="modal-main-image" src={images[0] || firstImage} alt={name || product.name} />
+          <div className="modal-main-image-wrapper">
+          {images.length > 1 && <button className="arrow left" onClick={prevImage}>‹-</button>}
+          <img className="modal-main-image" src={images[currentImage] || firstImage} alt={name || product.name} />
+          {images.length > 1 && <button className="arrow right" onClick={nextImage}>-›</button>}
 
+          {images.length > 1 && (
+            <div className="image-dots">
+              {images.map((_, idx) => (
+                <span key={idx} className={`dot ${idx === currentImage ? "active" : ""}`} onClick={() => setCurrentImage(idx)} />
+              ))}
+            </div>
+          )}
+        </div>
           {/* RIGHT PANEL */}
           <div className="modal-right">
             {editMode && isAdmin ? (
@@ -133,12 +181,62 @@ export default function ProductCard({
                   <label>Price:<input type="number" value={price} onChange={(e) => setPrice(e.target.value)} /></label>
                   <label>Stock:<input type="number" min="0" value={stock} onChange={(e) => setStock(parseInt(e.target.value) || 0)} /></label>
                   <label><input type="checkbox" checked={featured} onChange={() => setFeatured(!featured)} /> Featured</label>
+                  
                 </div>
 
-                <div style={{ margin: "10px 0" }}>
+                <button className="modal-btn" style={{width:"max-content", background:"black", color:"white",maxHeight:"fit-content"}} onClick={() => setSetFilters(v => !v)}>Set Filters</button>
+                {setfilters && isAdmin && (
+                  <div >
+                    <label className="modal-filters"> tags</label>
+                    <ul className="modal-filters-text">{allTags.map(tag => (
+                      <li key={tag}>
+                        <label >
+                          <input
+                            type="checkbox"
+                            checked={tags.includes(tag)}
+                            onChange={() =>
+                              setTags(prev => 
+                                prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev,tag]
+                              )
+                            }
+                            />
+                            {tag}
+                        </label>
+                      </li>
+                    ))}</ul>
+                  
+
+                  
+                  <label className="modal-filters">Collections</label>
+                  <ul className="modal-filters-text">
+                    {allColls.map(coll => (
+                      <li key={coll}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={collections.includes(coll)}
+                            onChange={() =>
+                              setCollections(prev =>
+                                prev.includes(coll)
+                                  ? prev.filter(c => c !== coll)
+                                  : [...prev, coll]
+                              )
+                            }
+                          />
+                          {coll}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                  </div>
+                 )}
+
+                <div >
                   <input type="file" multiple onChange={(e) => handleFiles(e.target.files)} />
                   {uploading && <p>Uploading…</p>}
                 </div>
+
+                
 
                 <div className="modal-buttons">
                   <button className="modal-btn primary" onClick={saveChanges}>Save</button>
@@ -156,8 +254,8 @@ export default function ProductCard({
                 </div>
 
                 <div className="modal-info-label">
-                  <p>Price: R{product.price}</p>
-                  <p>Stock: {stock}</p>
+                  <div>Price: R{product.price}</div>
+                  <div>Stock: {stock}</div>
                 </div>
 
                 <div className="modal-buttons">
@@ -197,17 +295,18 @@ export default function ProductCard({
 
           <div className="product-card-image-wrapper">
             <img src={firstImage} alt={product.name} />
+            
           </div>
 
           <div className="product-card-info">
-            <div className="product-card-name">{product.name}</div>
+            <div className="product-card-title">{product.name}</div>
 
-            {!grid && (
+            
               <>
                 <p className="product-card-price">R{product.price}</p>
                 <p className="product-card-description">{product.desc?.slice(0, 70)}{product.desc?.length > 70 ? "..." : ""}</p>
               </>
-            )}
+            
 
             {isAdmin && (
               <button className="modal-btn danger" disabled={deleting} style={{ bottom: "0", backgroundColor: "#ff4d4f", color: "#fff", fontSize: 12 }} onClick={async (e) => { e.stopPropagation(); await deleteProduct(); }}>

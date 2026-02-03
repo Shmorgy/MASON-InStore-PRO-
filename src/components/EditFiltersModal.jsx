@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase.js";
-import { doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, setDoc } from "firebase/firestore";
 
 export default function EditFiltersModal({
   open,
@@ -15,13 +15,16 @@ export default function EditFiltersModal({
     if (!open) return;
 
     const unsub = onSnapshot(
-      doc(db, "storeData", "main"),
+      doc(db, "storeData", "filters"),
       snap => {
-        if (!snap.exists()) return;
+        if (snap.exists()) {
         const data = snap.data();
         setLocalCollections(data.collections || []);
         setLocalTags(data.tags || []);
-      },
+      } else {
+        // Initialize doc if it doesn't exist
+        setDoc(doc(db, "storeData", "filters"), { collections: [], tags: [] });
+      }},
       err => console.error("Firestore modal error:", err)
     );
 
@@ -31,7 +34,7 @@ export default function EditFiltersModal({
   if (!open) return null;
 
   const saveToFirestore = async (collections, tags) => {
-    await updateDoc(doc(db, "storeData", "main"), {
+    await updateDoc(doc(db, "storeData", "filters"), {
       collections,
       tags
     });
@@ -68,7 +71,7 @@ export default function EditFiltersModal({
   };
 
   const titleStyle = {
-    color: "var(--FA-color)",
+    color: "rgb(255, 255, 255)",
     fontSize: "0.85rem",
     marginBottom: "6px"
   };
@@ -89,7 +92,7 @@ export default function EditFiltersModal({
 
   return (
     <section className="grid">
-      <div className="edit-filter-panel" onClick={onClose}>
+      <div className="edit-filter-panel" onClick={onClose}  style={{backgroundColor: "var(--top)",borderRadius: "5px",border: "2px solid var(--accent)"}}>
         <div onClick={e => e.stopPropagation()}>
 
           {/* Collections */}
@@ -109,7 +112,7 @@ export default function EditFiltersModal({
                       justifyContent: "space-between",
                       alignItems: "center",
                       marginBottom: "6px",
-                      color: "var(--FA-color)"
+                      color: "rgb(255, 255, 255)"
                     }}
                   >
                     <span>{c}</span>
@@ -191,7 +194,7 @@ export default function EditFiltersModal({
             <button
               className="filter-panel-close"
               onClick={onClose}
-              style={{ padding: "6px 12px" }}
+              style={{ padding: "6px 12px", background:"var(--accent)" }}
             >
               Close
             </button>

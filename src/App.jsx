@@ -25,10 +25,13 @@ import PayCancel from "./components/PayCancel.jsx";
 import StorePayResult from "./pages/storePayResult.jsx";
 
 import ScrollToTop from "./components/ScrollTop.jsx";
-import { useStore } from "./context/StoreProvider.jsx";
+import { StoreProvider, useStore } from "./context/StoreProvider.jsx";
+import { FaviconAndTitle } from "./components/FaviconAndTitle.jsx";
 
 import PaymentSuccess from "./components/tools/paymentSuccess.jsx";
 import PaymentCancelled  from "./components/tools/paymentCancelled.jsx";
+
+import Accounting from "./pages/accounting.jsx";
 
 export default function App() {
   const { storeName, loading } = useStore();
@@ -41,38 +44,42 @@ export default function App() {
 
   return (
     <div className="app-root">
-      <ScrollToTop/>
-      <Routes>
-          {/* Auth routes (no layout) */}
-          <Route path="/sign_in" element={<SignIn />} />
-          <Route path="/sign_up" element={<SignUp />} />
-          <Route path="/success" element={<PaySuccess />} />
-          <Route path="/cancel" element={<PayCancel />} />
+      <StoreProvider>
+        <FaviconAndTitle/>
+          <ScrollToTop/>
+          <Routes>
+              {/* Auth routes (no layout) */}
+              <Route path="/sign_in" element={<SignIn />} />
+              <Route path="/sign_up" element={<SignUp />} />
+              <Route path="/success" element={<PaySuccess />} />
+              <Route path="/cancel" element={<PayCancel />} />
 
-          <Route path="/payresult" element={<StorePayResult />} />
+              <Route path="/payresult" element={<StorePayResult />} />
 
-          {/* App routes (with layout) */}
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/settings" element={<Settings_Page />} />
-            <Route path="/store" element={<Store />} />
-            <Route path="/setup" element={<Setup />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/dummy" element={<Dummy />} />
+              {/* App routes (with layout) */}
+              <Route element={<Layout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/settings" element={<Settings_Page />} />
+                <Route path="/store" element={<Store />} />
+                <Route path="/setup" element={<Setup />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/dummy" element={<Dummy />} />
 
-            {/* Commerce flow */}
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+                {/* Commerce flow */}
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/payment-cancelled" element={<PaymentCancelled />} />
 
-            {/* Admin */}
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/orders" element={<Orders />} />
-          </Route>
-      </Routes>
+                {/* Admin */}
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/accounting" element={<Accounting/>}/>
+              </Route>
+          </Routes>
+      </StoreProvider>
     </div>
   );
 }

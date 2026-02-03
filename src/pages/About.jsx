@@ -46,6 +46,7 @@ export default function About() {
         style={{
           gap: 20,
           justifyItems: "center",
+          
         }}
       >
         {sections.map((section) => (
@@ -72,7 +73,8 @@ export default function About() {
               borderRadius: "50%",
               alignSelf: "center",
               backgroundColor: "transparent",
-              color:"black"
+              color:"var(--accent)",
+              borderColor:"var(--accent)"
             }}
             aria-label="Add about section"
           >

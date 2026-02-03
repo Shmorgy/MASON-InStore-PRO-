@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import { db, clientID, storeID, itcDb } from "../firebase.js";
+import { db, clientID, storeID, itcDb, itcStorage, storage } from "../firebase.js";
 import { useAuth } from "./AuthContext.jsx";
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+
 
 const StoreContext = createContext();
 
@@ -30,22 +32,23 @@ function normalizeTheme(input) {
     },
   };
 }
-
+const root = document.documentElement;
 function applyThemeToRoot(theme) {
-  const root = document.documentElement;
+  
 
   root.dataset.bgMode = theme.backgroundValue;
   root.style.setProperty("--FA-color", theme.primaryColor);
   root.style.setProperty("--FB-color", theme.secondaryColor);
-  root.style.setProperty("--font-titles", theme.fontTitle);
+  root.style.setProperty("--font-title", theme.fontTitle);
   root.style.setProperty("--font-text", theme.fontText);
   root.style.setProperty("--top", theme.topColor);
-  root.style.setProperty("--A-color", theme.accentColor);
+  root.style.setProperty("--accent", theme.accentColor);
   root.dataset.bgMode = theme.backgroundType;
   root.style.setProperty("--bg-color", theme.backgroundColor);
   root.style.setProperty(
     "--bg-gradient",
     `linear-gradient(135deg, ${theme.gradientColors.start}, ${theme.gradientColors.end})`
+  
   );
 
   if (theme.backgroundType === "gradient") {
@@ -87,11 +90,11 @@ export function StoreProvider({ children }) {
           
           try {
             // Fetch directly from ITC (public read allowed)
-            const itcRef = doc(itcDb, `clients/${clientID}/clientStores/${storeID}`);
+            const itcRef = doc(itcDb, `clients/${clientID}/clientstores/${storeID}`);
             const itcSnap = await getDoc(itcRef);
 
             if (!itcSnap.exists()) {
-              throw new Error(`ITC store not found at clients/${clientID}/clientStores/${storeID}`);
+              throw new Error(`ITC store not found at clients/${clientID}/clientstores/${storeID}`);
             }
 
             console.log("ITC store found, copying to local Firestore...");
@@ -129,16 +132,62 @@ export function StoreProvider({ children }) {
           const customData = customSnap.exists() ? customSnap.data() : {};
           const merged = normalizeTheme({ ...defaultData, ...customData });
           setStore(merged);
-          setStoreName(merged.name || "My Store");
+          setStoreName(merged.storeName || "My Store");
           applyThemeToRoot(merged);
           setReady(true);
         });
+
+        const logRef = defaultData.logoUrl; 
+
+
+
+      if (logRef) {
+        try {
+          const itcLogoRef = ref(itcStorage, logRef);
+          const localLogoRef = ref(storage, logRef);
+
+          let localLogoUrl;
+
+          // 1️⃣ Try local storage first (prevents re-upload loop)
+          try {
+            localLogoUrl = await getDownloadURL(localLogoRef);
+            console.log("Local logo already exists");
+          } catch {
+            // 2️⃣ Fetch from ITC
+            const remoteUrl = await getDownloadURL(itcLogoRef);
+            console.log("Fetched ITC logo:", remoteUrl);
+
+            const response = await fetch(remoteUrl);
+            if (!response.ok) {
+              throw new Error("Logo download failed");
+            }
+
+            const blob = await response.blob();
+
+            // 3️⃣ Upload to local Firebase Storage
+            await uploadBytes(localLogoRef, blob);
+
+            localLogoUrl = await getDownloadURL(localLogoRef);
+            console.log("Uploaded logo to local storage");
+          }
+
+          // 4️⃣ Store in runtime state
+          setStore(prev => ({
+            ...prev,
+            localLogoUrl,
+          }));
+
+        } catch (err) {
+          console.error("Logo sync failed:", err);
+        }
+      }
+
       } catch (err) {
         console.error("Failed to load store theme:", err);
         setReady(true); // Set ready to avoid infinite loading
       }
     };
-
+    
     init();
 
     return () => unsubscribe?.();

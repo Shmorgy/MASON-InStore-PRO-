@@ -21,7 +21,7 @@ export default function FilterPanel({
 
   useEffect(() => {
     const fetchFilters = async () => {
-      const docRef = doc(db, "storeData", "main");
+      const docRef = doc(db, "storeData", "filters");
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const data = snap.data();
@@ -61,7 +61,8 @@ export default function FilterPanel({
   const titleStyle = {
     color: "var(--FA-color)",
     fontSize: "0.85rem",
-    marginBottom: "6px"
+    marginBottom: "6px",
+    marginLeft: "3px"
   };
 
   const panelStyle = {
@@ -81,14 +82,15 @@ export default function FilterPanel({
       )}
 
       {/* Collections */}
-      <div>
+      <div style={{border: "1px solid #666",backgroundColor: "#333",borderRadius: "5px",border: "2px solid #666"}}>
         <div style={titleStyle}>Collections</div>
         <section
           style={{
             overflowY: "auto",
             maxHeight: "60px",
             scrollbarColor: "transparent transparent",
-            scrollBehavior: "smooth"
+            scrollBehavior: "smooth",
+            
           }}
         >
           <div style={panelStyle}>
@@ -110,7 +112,7 @@ export default function FilterPanel({
       </div>
 
       {/* Tags */}
-      <div style={{ marginTop: "12px" }}>
+      <div style={{ marginTop: "12px",border: "1px solid #666",backgroundColor: "#333",borderRadius: "5px",border: "2px solid #666"}}>
         <div style={titleStyle}>Tags</div>
         <section
           style={{
@@ -139,7 +141,7 @@ export default function FilterPanel({
       </div>
 
       {/* Price Range */}
-      <div style={{ marginTop: "12px" }}>
+      <div style={{ marginTop: "12px",border: "1px solid #666",backgroundColor: "#333",borderRadius: "5px",border: "2px solid #666"  }}>
         <div style={titleStyle}>Price Range</div>
         <div
           style={{

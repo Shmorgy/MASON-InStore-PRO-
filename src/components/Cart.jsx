@@ -7,7 +7,7 @@ export default function Cart() {
 
   if (!cart.length) {
     return (
-      <h2 style={{ textAlign: "center", marginTop: "20vh", color: "#fff"}}>
+      <h2 className="glassStyle" style={{ textAlign: "center", color: "#fff"}}>
         Your cart is empty
       </h2>
     );
@@ -22,35 +22,38 @@ export default function Cart() {
   const glassStyle = {
     backdropFilter: "blur(12px)",
     WebkitBackdropFilter: "blur(12px)",
-    background: "rgba(41, 41, 41, 0.44)",
-    border: "1px solid rgba(46, 46, 46, 0.49)",
+    background: "rgba(255, 255, 255, 0.29)",
+    border: "1px solid rgb(46, 46, 46)",
     borderRadius: "16px",
     padding: "24px",
     maxWidth: "700px",
     margin: "10vh auto",
-    color: "#fff",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
-    top:"7vh",
+    color: "#000000",
+    boxShadow: "0 8px 30px rgba(0, 0, 0, 0.3)",
+    
   };
 
   const listItemStyle = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "8px 0",
-    borderBottom: "1px solid rgba(255,255,255,0.2)",
+    padding: "8px ",
+    borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
+    boxShadow: "inset 0px 0px 10px rgba(0, 0, 0, 0.2)",
+    borderRadius:"15px",
+    margin:"9px"
   };
 
   return (
     <>
-    <div style={{ padding: "0 16px"}}>
+    <div  style={{ padding: "0 16px"}}>
       <div style={glassStyle} >
         <h1 style={{ textAlign: "center", marginBottom: "24px" }}>Your Cart</h1>
 
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {cart.map((item) => (
             <li key={item.id} style={listItemStyle}>
-              <span>
+              <span >
                 {item.name} × {item.quantity} — R
                 {(Number(item.price || 0) * item.quantity).toFixed(2)}
               </span>
@@ -58,7 +61,7 @@ export default function Cart() {
               <button
                 className="Admin_button"
                 onClick={() => removeFromCart(item.id)}
-                style={{ padding: "6px 12px" }}
+                style={{ padding: "6px", marginTop:"2vh" }}
               >
                 Remove
               </button>

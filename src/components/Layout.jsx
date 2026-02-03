@@ -61,6 +61,7 @@ function Layout() {
             
             {user && <button className="FB" onClick={go("/orders")}>Orders</button>}
             {isAdmin && <button className="FB" onClick={go("/setup")}>Setup</button>}
+            {isAdmin && <button className="FB" onClick={go("/accounting")}>Account</button>}
             {user && <button className="FB" onClick={handleLogout}>Logout</button>}
           </section>
         </section>

@@ -99,9 +99,9 @@ export default function Settings() {
   };
 
   return (
-    <div style={{ maxWidth: "100vw", margin: "0 auto", padding: "2rem", fontFamily: "Arial, sans-serif", backgroundColor:"white" }}>
+    <div style={{ maxWidth: "100vw", margin: "0 auto", padding: "2rem", fontFamily: "var(--font-text)", backgroundColor:"white" }}>
     <p style={{marginTop:"5dvh"}}></p>
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: 20, fontFamily: "Arial, sans-serif" }}>
+    <div style={{ maxWidth: 700, margin: "0 auto", padding: 20, fontFamily: "var(--font-text)" }}>
       <h2>Settings</h2>
 
       

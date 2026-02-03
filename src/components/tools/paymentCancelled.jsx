@@ -83,7 +83,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px',
-    background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)'
+    background: 'linear-gradient(135deg, #ffa82600 0%, #fb8a0000 100%)'
   },
   card: {
     background: 'rgba(255, 255, 255, 0.95)',

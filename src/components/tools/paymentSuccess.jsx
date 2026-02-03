@@ -101,7 +101,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    background: 'linear-gradient(135deg, #667eea00 0%rgba(118, 75, 162, 0)a2 100%)'
   },
   card: {
     background: 'rgba(255, 255, 255, 0.95)',

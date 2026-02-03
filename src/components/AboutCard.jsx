@@ -35,7 +35,7 @@ export default function AboutCard({ title, text, image, onSave, onRemove }) {
      
 
       {/* LEFT: TEXT */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, columnSpan:1 }}>
+      <div  style={{ display: "flex", flexDirection: "column", gap: 12, columnSpan:1 }}>
         {editing && isAdmin ? (
           <input
             type="text"
@@ -46,11 +46,12 @@ export default function AboutCard({ title, text, image, onSave, onRemove }) {
               fontWeight: "bold",
               padding: 8,
               borderRadius: 6,
-              border: "2px dotted rgba(0,0,0,0.2)",
+              border: "2px dotted var(--accent)",
               background:"transparent",
               marginBottom: 8,
               width: "100%",
               boxSizing: "border-box",
+              
             }}
           />
         ) : (
@@ -71,11 +72,11 @@ export default function AboutCard({ title, text, image, onSave, onRemove }) {
               border: "2px dotted rgba(0,0,0,0.15)",
               background: "rgba(81, 81, 81, 0.0)",
               boxSizing: "border-box",
-              fontFamily:"F25"
+              fontFamily:"var(--font-title)"
             }}
           />
         ) : (
-          <p style={{ lineHeight: 1.6, margin: 0, wordBreak:"break-word" }}>{currentText}</p>
+          <p className="about-card-text" style={{ lineHeight: 1.6, margin: 0, wordBreak:"break-word" }}>{currentText}</p>
         )}
 
         {isAdmin && (
@@ -137,6 +138,7 @@ export default function AboutCard({ title, text, image, onSave, onRemove }) {
               width: "100%",
               height: "100%",
               objectFit: "cover",
+              
             }}
           />
         ) : (
