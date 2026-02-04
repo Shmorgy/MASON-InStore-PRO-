@@ -330,7 +330,7 @@ justify-content: center;
 }
 
 .auth-form {
-background: rgb(255, 255, 255);
+background: rgba(255, 255, 255, 0.179);
 padding: 3rem 2rem;
 border-radius: var(--border-radius);
 box-shadow: 0 8px 20px rgba(0,0,0,0.3);
@@ -364,7 +364,7 @@ margin-top: 1em;
 
 .auth-button {
 padding: 0.75rem 1rem;
-background-color: white;
+background-color: rgba(255, 255, 255, 0.255);
 color: var(--FA-color);
 font-family: 'Asign', 'F25', Arial, sans-serif;
 border-radius: var(--border-radius);

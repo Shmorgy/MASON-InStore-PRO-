@@ -63,14 +63,24 @@ function applyThemeToRoot(theme) {
 
 /* ───────── provider ───────── */
 
-export function StoreProvider({ children }) {
+export function StoreProvider({ children, DevMode = false }) {
   const { loading: authLoading } = useAuth();
   const [store, setStore] = useState(null);
   const [storeName, setStoreName] = useState("");
   const [ready, setReady] = useState(false);
   const bootstrappedRef = useRef(false);
 
+  
   useEffect(() => {
+    if (DevMode)  {
+      console.log("⚡ Dev mode enabled, skipping store initialization");
+      setStore({storeName: "dev"});
+      setStoreName("dev");
+      setReady(true);
+      return;
+    }
+    
+
     let unsubscribe;
 
     const init = async () => {

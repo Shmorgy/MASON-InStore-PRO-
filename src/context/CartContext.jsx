@@ -25,7 +25,14 @@ function writeCart(key, cart) {
 
 export function CartProvider({ children }) {
   const { user, loading: authLoading } = useAuth();
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    try {
+      const guestCart = readCart(GUEST_KEY);
+      return guestCart;
+    } catch {
+      return [];
+    }
+  });
 
   /* ----------------------------------
      Load correct cart on auth change
@@ -74,16 +81,25 @@ export function CartProvider({ children }) {
      Cart operations
   ---------------------------------- */
   const addToCart = (product) => {
+    const qtyToAdd = Number(product.quantity) || 1;
     setCart((prev) => {
       const existing = prev.find((p) => p.id === product.id);
+      const currentQty = existing ? existing.quantity : 0;
+      const newQty = currentQty + qtyToAdd;
+
+      if (product.stock && newQty > product.stock) {
+        alert(`Cannot add more than ${product.stock} items (${currentQty}) already in cart!)`);
+        return prev;
+      }
+
       if (existing) {
         return prev.map((p) =>
           p.id === product.id
-            ? { ...p, quantity: p.quantity + 1 }
+            ? { ...p, quantity: newQty }
             : p
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: qtyToAdd }];
     });
   };
 

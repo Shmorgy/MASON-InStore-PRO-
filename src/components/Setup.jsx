@@ -436,14 +436,16 @@ export default function Setup() {
             {/* Fonts Section */}
             <Section title="Typography">
               <FontSelect
-                label="Heading Font"
+                label="Title Font"
                 value={theme.fontTitle}
                 onChange={(v) => updateTheme({ fontTitle: v })}
+                style={{fontFamily:theme.fontTitle}}
               />
               <FontSelect
-                label="Body Font"
+                label="Text Font"
                 value={theme.fontText}
                 onChange={(v) => updateTheme({ fontText: v })}
+                style={{fontFamily:"theme.fontText"}}
               />
             </Section>
 

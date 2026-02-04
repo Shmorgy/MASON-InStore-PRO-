@@ -212,10 +212,10 @@ export default function Checkout() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {normalizedCart.map((item, idx) => (
                 <li key={item.id || idx} style={styles.cartItem}>
-                  <span style={{ flex: 1 }}>{item.name} <span style={{ color: "#888" }}>× {item.qty}</span></span>
+                  <span style={{ flex: 1 }}>{item.name} <span style={{ color: "#ffffff" }}>× {item.qty}</span></span>
                   <span style={{ fontWeight: "600" }}>R{(item.lineTotalCents / 100).toFixed(2)}</span>
                 </li>
-              ))}
+              ))} 
             </ul>
           )}
         </div>
