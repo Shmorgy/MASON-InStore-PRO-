@@ -1,15 +1,20 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
 export default function PaySuccess() {
+  const { clearCart } = useCart();
+  
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const params = new URLSearchParams(location.search);
   const orderId = params.get("order");
+  
 
   useEffect(() => {
-    // Optional: fetch order status from your backend
+    clearCart()
     console.log("Payment successful for order:", orderId);
   }, [orderId]);
 

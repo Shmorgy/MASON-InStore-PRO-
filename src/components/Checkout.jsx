@@ -66,7 +66,8 @@ export default function Checkout() {
 
         // Validate and get line items with proper product names from database
         const validationResult = await validateCheckoutTotal(storeID, cartForValidation);
-        const furl = await getStockServiceUrl();
+        const furl = getStockServiceUrl();
+        console.log(furl);
         console.log("Validation result:", validationResult);
 
       // Use the validated line items (which include product names from the database)
@@ -91,7 +92,6 @@ export default function Checkout() {
           },
           delivery: method === "Delivery" ? { method, address } : { method },
           paymentMethod,
-          sandbox: false, // Changed to true for testing
           storeurl : window.location.origin,
           serviceFunctionUrl : furl
         };

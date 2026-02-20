@@ -11,8 +11,8 @@ import { getFunctions } from "firebase/functions";
 // cID = Client ID and must be lowercase
 // sID = Store ID and must be literal, hence `${}`
 
-export const cID = "imaanjade@gmail.com";
-export const sID = "MASON";
+export const cID = import.meta.env.VITE_CLIENT_ID ||"imaanjade@gmail.com";
+export const sID = import.meta.env.VITE_STORE_ID || "MASON";
 
 export const clientID = `${cID}`;
 export const storeID = `${sID}`;
@@ -21,20 +21,20 @@ export const storeID = `${sID}`;
 // Template Firebase App
 // -----------------------------
 const templateConfig = {
-  apiKey: "AIzaSyD-XizEX3Zi4q4g_6rxogYhG2JPdjxsU9Y",
-  authDomain: "instore-mason.firebaseapp.com",
-  projectId: "instore-mason",
-  storageBucket: "instore-mason.firebasestorage.app",
-  messagingSenderId: "604116313071",
-  appId: "1:604116313071:web:87fba2b9b18d0ae473cc1a",
-  measurementId: "G-PL4HGX0SD8"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyD-XizEX3Zi4q4g_6rxogYhG2JPdjxsU9Y",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "instore-mason.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "instore-mason",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "instore-mason.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID||"604116313071",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:604116313071:web:87fba2b9b18d0ae473cc1a",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID  || "G-PL4HGX0SD8"
 };
 
-export const templateApp = initializeApp(templateConfig, "TemplateApp");
-export const db = getFirestore(templateApp);
-export const auth = getAuth(templateApp);
-export const storage = getStorage(templateApp);
-export const functions = getFunctions(templateApp, "us-central1");
+export const app = initializeApp(templateConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const storage = getStorage(app);
+export const functions = getFunctions(app, "us-central1");
 export const projectID = templateConfig.projectId;
 
 // -----------------------------

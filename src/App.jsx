@@ -22,14 +22,13 @@ import Dummy from "./pages/dummy.jsx";
 
 import PaySuccess from "./components/PaySuccess.jsx";
 import PayCancel from "./components/PayCancel.jsx";
-import StorePayResult from "./pages/storePayResult.jsx";
+
 
 import ScrollToTop from "./components/ScrollTop.jsx";
 import { StoreProvider, useStore } from "./context/StoreProvider.jsx";
 import { FaviconAndTitle } from "./components/FaviconAndTitle.jsx";
 
-import PaymentSuccess from "./components/tools/paymentSuccess.jsx";
-import PaymentCancelled  from "./components/tools/paymentCancelled.jsx";
+
 
 import Accounting from "./pages/accounting.jsx";
 
@@ -54,7 +53,7 @@ export default function App() {
               <Route path="/success" element={<PaySuccess />} />
               <Route path="/cancel" element={<PayCancel />} />
 
-              <Route path="/payresult" element={<StorePayResult />} />
+             
 
               {/* App routes (with layout) */}
               <Route element={<Layout />}>
@@ -70,8 +69,8 @@ export default function App() {
                 {/* Commerce flow */}
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+                <Route path="/payment-success" element={<PaySuccess />} />
+                <Route path="/payment-cancelled" element={<PayCancel />} />
 
                 {/* Admin */}
                 <Route path="/admin" element={<Admin />} />

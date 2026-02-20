@@ -1,5 +1,5 @@
 // src/utils/validateCheckoutTotals.js
-import { db } from "../firebase";
+import { db } from "../firebase.js";
 import { doc, getDoc } from "firebase/firestore";
 
 /**
@@ -8,6 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
  * All prices are handled in integer cents to avoid floating point issues.
  */
 export async function validateCheckoutTotal(storeId, cart) {
+
   if (!storeId || !Array.isArray(cart) || cart.length === 0) {
     throw new Error("Invalid storeId or empty cart");
   }
@@ -54,4 +55,5 @@ export async function validateCheckoutTotal(storeId, cart) {
     totalCents,                          // exact integer cents
     lineItems,
   };
+
 }

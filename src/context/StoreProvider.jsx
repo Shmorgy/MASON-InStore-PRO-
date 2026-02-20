@@ -44,7 +44,7 @@ function applyThemeToRoot(theme) {
   root.style.setProperty("--top", theme.topColor);
   root.style.setProperty("--accent", theme.accentColor);
   root.dataset.bgMode = theme.backgroundType;
-  root.style.setProperty("--bg-color", theme.backgroundColor);
+  root.style.setProperty("--bg-color", theme.backgroundValue);
   root.style.setProperty(
     "--bg-gradient",
     `linear-gradient(135deg, ${theme.gradientColors.start}, ${theme.gradientColors.end})`

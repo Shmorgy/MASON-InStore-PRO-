@@ -33,26 +33,26 @@ const THEME_PRESETS = [
   {
     name: "Ocean Blue",
     topColor: "rgba(67, 139, 154, 0.53)",
-    accentColor: "rgb(202, 253, 255)",
-    primaryColor: "rgba(52,152,219,1)",
+    accentColor: "rgb(115, 0, 255)",
+    primaryColor: "rgb(194, 231, 255)",
     secondaryColor: "rgb(72, 46, 204)",
     backgroundValue: "rgba(15,17,31,0.9)",
-    backgroundType: "solid",
+    backgroundType: "gradient",
     gradientColors: {
       start: "rgba(52,152,219,1)",
-      end: "rgba(46,204,113,1)",
+      end: "rgb(46, 204, 204)",
     },
-    fontTitle: "var(--font-title)",
-    fontText: "var(--font-text)",
+    fontTitle: "Courier New",
+    fontText: "Roboto",
   },
   {
     name: "Sunset",
     topColor: "rgba(255, 68, 0, 0.47)",
-    accentColor: "rgb(255, 255, 255)",
-    primaryColor: "rgba(231,76,60,1)",
-    secondaryColor: "rgba(241,196,15,1)",
+    accentColor: "rgb(255, 0, 0)",
+    primaryColor: "rgb(255, 219, 190)",
+    secondaryColor: "rgb(252, 223, 109)",
     backgroundValue: "rgb(148, 91, 25)",
-    backgroundType: "solid",
+    backgroundType: "gradient",
     gradientColors: {
       start: "rgba(231,76,60,1)",
       end: "rgba(241,196,15,1)",
@@ -61,16 +61,16 @@ const THEME_PRESETS = [
     fontText: "Georgia",
   },
   {
-    name: "Purple Mist",
+    name: "Purple",
     topColor: "rgb(155, 89, 182)",
-    accentColor: "rgb(255, 255, 255)",
-    primaryColor: "rgba(155,89,182,1)",
-    secondaryColor: "rgba(52,152,219,1)",
-    backgroundValue: "rgba(30,30,60,0.9)",
+    accentColor: "rgb(255, 209, 253)",
+    primaryColor: "rgb(236, 187, 255)",
+    secondaryColor: "rgb(244, 109, 208)",
+    backgroundValue: "rgba(161, 0, 70, 0.9)",
     backgroundType: "solid",
     gradientColors: {
       start: "rgba(155,89,182,1)",
-      end: "rgba(52,152,219,1)",
+      end: "rgb(219, 52, 216)",
     },
     fontTitle: "Verdana",
     fontText: "Verdana",
@@ -96,7 +96,7 @@ const THEME_PRESETS = [
 const SAFE_THEME_SHAPE = {
   name: "",
   backgroundType: "solid",
-  backgroundValue: "",
+  backgroundValue: "#fff",
   primaryColor: "",
   secondaryColor: "",
   topColor: "",
@@ -292,7 +292,7 @@ export default function Setup() {
   /* ───────── Computed Styles ───────── */
   const bg =
     theme.backgroundType === "solid"
-      ? theme.backgroundValue
+      ? `theme.backgroundValue`
       : `linear-gradient(135deg, ${theme.gradientColors.start}, ${theme.gradientColors.end})`;
 
   /* ───────── Render ───────── */
@@ -684,7 +684,7 @@ const buttonStyle = {
   padding: "0.875rem 1.5rem",
   border: "none",
   borderRadius: "10px",
-  background: " #baff66 0%",
+  background: " #8ac542 0%",
   color: "var(--accent)",
   cursor: "pointer",
   fontSize: "auto",

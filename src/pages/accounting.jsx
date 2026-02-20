@@ -14,24 +14,62 @@ export default function Accounting() {
   const [loading, setLoading] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState("");
   const [payoutLoading, setPayoutLoading] = useState(false);
-  const [metrics, setMetrics] = useState({ totalEarnings: 0, completedOrders: 0, availableBalance: 0 });
+  const [metrics, setMetrics] = useState({
+    totalEarnings: 0,
+    completedOrders: 0,
+    availableBalance: 0,
+    grossRevenue: 0,
+    grossProfit: 0,
+    uniqueVisitors: 0,
+    ordersPlaced: 0,
+    avgOrderValue: 0,
+  });
 
   const intervalRef = useRef(null);
 
   // Fetch completed orders and calculate metrics
   const fetchOrders = async () => {
     try {
-      const res = await getOrdersFn({ clientId:clientID, storeId:storeID });
-      const fetchedOrders = res.data || [];
+      const res = await getOrdersFn({ clientId: clientID, storeId: storeID });
+      const fetchedOrders = res.data?.orders || res.data || [];
+      const planType = res.data?.planType || "basic"; // fallback
       setOrders(fetchedOrders);
 
       const completedOrders = fetchedOrders.filter(o => o.status === "completed");
-      const totalEarnings = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
-      const reserveAmount = totalEarnings * RESERVE_RATIO;
-      const availableBalance = Math.max(0, totalEarnings - reserveAmount);
+      const grossRevenue = completedOrders.reduce(
+        (sum, o) => sum + (o.totalAmount || 0),
+        0
+      );
 
-      setMetrics({ totalEarnings, completedOrders: completedOrders.length, availableBalance });
+      const planFeeRate = planType === "basic" ? 0.05 : 0;
+      const totalFeeRate = planFeeRate + RESERVE_RATIO;
+      const totalFees = grossRevenue * totalFeeRate;
+      const grossProfit = grossRevenue - totalFees;
+
+      const totalEarnings = grossRevenue;
+      const reserveAmount = grossRevenue * RESERVE_RATIO;
+      const availableBalance = Math.max(0, grossRevenue - reserveAmount);
+
+      const uniqueVisitors = new Set(
+        fetchedOrders.map(o => o.customer?.email).filter(Boolean)
+      ).size;
+
+      const ordersPlaced = fetchedOrders.length;
+      const avgOrderValue = completedOrders.length
+        ? grossRevenue / completedOrders.length
+        : 0;
+
+      setMetrics({
+        totalEarnings,
+        completedOrders: completedOrders.length,
+        availableBalance,
+        grossRevenue,
+        grossProfit,
+        uniqueVisitors,
+        ordersPlaced,
+        avgOrderValue,
+      });
     } catch (err) {
       console.error("Error fetching orders:", err);
     }
@@ -53,7 +91,11 @@ export default function Accounting() {
       return alert(`Minimum payout is R${MIN_PAYOUT}`);
     }
     if (amount > metrics.availableBalance) {
-      return alert(`Cannot request more than available balance: R${metrics.availableBalance.toFixed(2)}`);
+      return alert(
+        `Cannot request more than available balance: R${metrics.availableBalance.toFixed(
+          2
+        )}`
+      );
     }
 
     setPayoutLoading(true);
@@ -88,6 +130,16 @@ export default function Accounting() {
           <strong>R{metrics.availableBalance.toFixed(2)}</strong>
         </div>
 
+        {/* Advanced Metrics Card */}
+        <div style={styles.card}>
+          <h3 style={{ marginTop: 0 }}>Performance</h3>
+          <div style={styles.metric}><span>Gross Revenue:</span><strong>R{metrics.grossRevenue.toFixed(2)}</strong></div>
+          <div style={styles.metric}><span>Gross Profit:</span><strong>R{metrics.grossProfit.toFixed(2)}</strong></div>
+          <div style={styles.metric}><span>Unique Visitors:</span><strong>{metrics.uniqueVisitors}</strong></div>
+          <div style={styles.metric}><span>Orders Placed:</span><strong>{metrics.ordersPlaced}</strong></div>
+          <div style={styles.metric}><span>Avg Order Value:</span><strong>R{metrics.avgOrderValue.toFixed(2)}</strong></div>
+        </div>
+
         <h2>Payout</h2>
         <input
           type="number"
@@ -98,7 +150,11 @@ export default function Accounting() {
         />
         <button
           onClick={handlePayout}
-          disabled={payoutLoading || Number(payoutAmount) < MIN_PAYOUT || Number(payoutAmount) > metrics.availableBalance}
+          disabled={
+            payoutLoading ||
+            Number(payoutAmount) < MIN_PAYOUT ||
+            Number(payoutAmount) > metrics.availableBalance
+          }
           style={{ ...styles.button, opacity: payoutLoading ? 0.7 : 1 }}
         >
           {payoutLoading ? "Requesting..." : "Request Payout"}
@@ -157,8 +213,8 @@ const styles = {
     borderRadius: 12,
     maxHeight: "80vh",
     overflowY: "auto",
-    fontFamily:'var(--font-text)',
-    border:"1px solid rgb(0,0,0)"
+    fontFamily: 'var(--font-text)',
+    border: "1px solid rgb(0,0,0)",
   },
   right: {
     flex: 1,
@@ -166,8 +222,8 @@ const styles = {
     padding: 20,
     borderRadius: 12,
     height: "fit-content",
-    fontFamily:'var(--font-text)',
-    border:"1px solid rgb(0,0,0)"
+    fontFamily: 'var(--font-text)',
+    border: "1px solid rgb(0,0,0)",
   },
   table: {
     width: "100%",
@@ -177,6 +233,14 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     marginBottom: 12,
+  },
+  card: {
+    marginTop: 20,
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 10,
+    background: "#ffffff80",
+    border: "1px solid #000",
   },
   input: {
     width: "fit-content",

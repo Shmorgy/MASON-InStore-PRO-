@@ -1,3 +1,3 @@
-// Just import and export for Firebase to deploy
-export { bootstrapStore } from "./seedStore.js";
+
+export { processPaymentSuccess } from "./processPaymentSuccess.js"
 
