@@ -4,7 +4,6 @@ import { getProductImage } from "../utils/getProductImage";
 import { db, storage } from "../firebase.js";
 import { doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { triggerTextRipple } from "../hooks/useTextRipple.js";
 import "../productStyles.css";
 import { useCart } from "../context/CartContext.jsx";
 
@@ -349,7 +348,7 @@ export default function ProductCard({
                         e.stopPropagation();
                         if (stock <= 0 || cartQuantity >= stock) return;
                         addToCart({ ...product, quantity });
-                        triggerTextRipple(e);
+              
                         
                       }}
                     >

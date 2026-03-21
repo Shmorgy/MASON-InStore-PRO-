@@ -9,7 +9,14 @@ export const processPaymentSuccess = onRequest(
     memory: "256MiB",
     minInstances: 0,
     maxInstances: 10,
-    secrets: ["TEMPLATE_SERVICE_ACCOUNT", "ITC_SERVICE_ACCOUNT", "INTERNAL_SERVICE_TOKEN"],
+    secrets: [
+      "TEMPLATE_SERVICE_ACCOUNT",
+      "ITC_SERVICE_ACCOUNT",
+      "INTERNAL_SERVICE_TOKEN",
+      "VITE_CLIENT_ID",
+      "VITE_STORE_ID",
+      "STORE_PROJECT_ID",
+    ],
   },
   async (req, res) => {
     const db = getDb();       // instore-mason → products
@@ -36,7 +43,6 @@ export const processPaymentSuccess = onRequest(
 
     try {
       // -------------------- FETCH ORDER (itcDb) --------------------
-      // Orders live in itcore-7bfe2
       const orderRef = itcDb
         .collection("clients")
         .doc(clientId)
@@ -52,84 +58,80 @@ export const processPaymentSuccess = onRequest(
 
       const orderData = orderSnap.data();
 
-
-
       if (orderData.paymentProcessed) {
         console.log(`[${requestId}] Already processed, skipping`);
         return res.status(200).json({ success: true, stockUpdates: [{ status: "skipped", reason: "already processed" }] });
       }
 
       // -------------------- UPDATE STOCK (db) --------------------
-      // Products live in instore-mason — use a db transaction for stock updates
       const stockUpdates = [];
 
       await db.runTransaction(async (transaction) => {
-      // -------------------- PASS 1: ALL READS --------------------
-      const reads = await Promise.all(
-        items.map(async (item) => {
+        // -------------------- PASS 1: ALL READS --------------------
+        const reads = await Promise.all(
+          items.map(async (item) => {
+            const { productId, variantId, qty } = item;
+
+            if (!productId || !qty || qty <= 0) {
+              return { item, snap: null, skipped: true };
+            }
+
+            const productRef = db.collection("products").doc(productId);
+            const productSnap = await transaction.get(productRef);
+            return { item, snap: productSnap, ref: productRef };
+          })
+        );
+
+        // -------------------- PASS 2: ALL WRITES --------------------
+        for (const { item, snap, skipped, ref } of reads) {
           const { productId, variantId, qty } = item;
 
-          if (!productId || !qty || qty <= 0) {
-            return { item, snap: null, skipped: true };
-          }
-
-          const productRef = db.collection("products").doc(productId);
-          const productSnap = await transaction.get(productRef);
-          return { item, snap: productSnap, ref: productRef };
-        })
-      );
-
-      // -------------------- PASS 2: ALL WRITES --------------------
-      for (const { item, snap, skipped, ref } of reads) {
-        const { productId, variantId, qty } = item;
-
-        if (skipped) {
-          stockUpdates.push({ productId, variantId, status: "skipped", reason: "Invalid item" });
-          continue;
-        }
-
-        if (!snap.exists) {
-          stockUpdates.push({ productId, variantId, status: "error", reason: "Product not found" });
-          continue;
-        }
-
-        const product = snap.data();
-
-        if (variantId) {
-          const variants = product.variants || [];
-          const index = variants.findIndex((v) => v.id === variantId);
-
-          if (index === -1) {
-            stockUpdates.push({ productId, variantId, status: "error", reason: "Variant not found" });
+          if (skipped) {
+            stockUpdates.push({ productId, variantId, status: "skipped", reason: "Invalid item" });
             continue;
           }
 
-          const currentStock = variants[index].stock || 0;
-          const newStock = Math.max(0, currentStock - qty);
-          const updatedVariants = [...variants];
-          updatedVariants[index] = { ...variants[index], stock: newStock };
+          if (!snap.exists) {
+            stockUpdates.push({ productId, variantId, status: "error", reason: "Product not found" });
+            continue;
+          }
 
-          transaction.update(ref, {
-            variants: updatedVariants,
-            lastStockUpdate: FieldValue.serverTimestamp(),
-          });
-          stockUpdates.push({ productId, variantId, previousStock: currentStock, newStock, quantityDeducted: qty });
+          const product = snap.data();
 
-        } else {
-          const currentStock = product.stock || 0;
-          const newStock = Math.max(0, currentStock - qty);
+          if (variantId) {
+            const variants = product.variants || [];
+            const index = variants.findIndex((v) => v.id === variantId);
 
-          transaction.update(ref, {
-            stock: newStock,
-            lastStockUpdate: FieldValue.serverTimestamp(),
-          });
-          stockUpdates.push({ productId, previousStock: currentStock, newStock, quantityDeducted: qty });
+            if (index === -1) {
+              stockUpdates.push({ productId, variantId, status: "error", reason: "Variant not found" });
+              continue;
+            }
+
+            const currentStock = variants[index].stock || 0;
+            const newStock = Math.max(0, currentStock - qty);
+            const updatedVariants = [...variants];
+            updatedVariants[index] = { ...variants[index], stock: newStock };
+
+            transaction.update(ref, {
+              variants: updatedVariants,
+              lastStockUpdate: FieldValue.serverTimestamp(),
+            });
+            stockUpdates.push({ productId, variantId, previousStock: currentStock, newStock, quantityDeducted: qty });
+
+          } else {
+            const currentStock = product.stock || 0;
+            const newStock = Math.max(0, currentStock - qty);
+
+            transaction.update(ref, {
+              stock: newStock,
+              lastStockUpdate: FieldValue.serverTimestamp(),
+            });
+            stockUpdates.push({ productId, previousStock: currentStock, newStock, quantityDeducted: qty });
+          }
         }
-      }
-    });
+      });
 
       // -------------------- MARK ORDER PROCESSED (itcDb) --------------------
-      // Write back to itcDb separately after stock transaction succeeds
       await orderRef.update({
         paymentProcessed: true,
         paymentProcessedAt: FieldValue.serverTimestamp(),

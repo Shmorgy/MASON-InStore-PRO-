@@ -26,14 +26,14 @@ export function getItcDb() {
 
 // Client email — e.g. "joe@example.com"
 export function getClientId() {
-  const v = process.env.CLIENT_ID;
-  if (!v) throw new Error("Missing secret: CLIENT_ID");
+  const v = process.env.VITE_CLIENT_ID;
+  if (!v) throw new Error("Missing secret: VITE_CLIENT_ID");
   return v;
 }
 
 // Literal store name — e.g. "Joe's Coffee"
 export function getStoreId() {
-  const v = process.env.STORE_ID;
-  if (!v) throw new Error("Missing secret: STORE_ID");
+  const v = process.env.VITE_STORE_ID;
+  if (!v) throw new Error("Missing secret: VITE_STORE_ID");
   return v;
 }
